@@ -161,26 +161,4 @@ router.put('/change-password', authenticate, async (req, res) => {
   }
 });
 
-// TEMPORARY: admin setup — resets password and ensures admin exists
-router.get('/create-admin-now', async (req, res) => {
-  try {
-    const hash = await bcrypt.hash('Admin@2024', 10);
-    const [existing] = await db.query("SELECT id FROM users WHERE email = 'admin@mcjacobfarms.com'");
-    if (existing.length > 0) {
-      await db.query(
-        "UPDATE users SET password=?, role='admin', status='active' WHERE email='admin@mcjacobfarms.com'",
-        [hash]
-      );
-      return res.json({ success: true, message: 'Password reset! Login: admin@mcjacobfarms.com / Admin@2024' });
-    }
-    await db.query(
-      "INSERT INTO users (full_name, email, phone, password, role, my_referral_code, status) VALUES (?, ?, ?, ?, 'admin', 'ADMIN001', 'active')",
-      ['Super Admin', 'admin@mcjacobfarms.com', '07044784949', hash]
-    );
-    res.json({ success: true, message: 'Admin created! Login: admin@mcjacobfarms.com / Admin@2024' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 module.exports = router;
