@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products - Admin | MC-JACOB GLOBAL FARMS</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<aside class="admin-sidebar" id="sidebar">
+  <div class="logo"><div class="logo-top"><div class="logo-icon">🌿</div><div class="logo-text"><h2>MC-JACOB</h2><span>GLOBAL FARMS LTD</span></div></div><span class="admin-badge">ADMIN PANEL</span></div>
+  <nav class="admin-nav">
+    <div class="admin-nav-section">Main</div>
+    <a href="/admin/"><span class="n-icon">📊</span> Dashboard</a>
+    <a href="/admin/products.html" class="active"><span class="n-icon">🌿</span> Products</a>
+    <a href="/admin/orders.html"><span class="n-icon">📦</span> Orders</a>
+    <a href="/admin/payments.html"><span class="n-icon">💳</span> Payments</a>
+    <a href="/admin/delivery.html"><span class="n-icon">🚚</span> Delivery</a>
+    <div class="admin-nav-section">Management</div>
+    <a href="/admin/dealers.html"><span class="n-icon">👥</span> Dealers</a>
+    <a href="/admin/referrers.html"><span class="n-icon">🔗</span> Referrers</a>
+    <a href="/admin/settings.html"><span class="n-icon">⚙️</span> Settings</a>
+    <div class="admin-nav-section">Account</div>
+    <a href="/"><span class="n-icon">🏠</span> View Site</a>
+    <a href="#" onclick="logout()"><span class="n-icon">🚪</span> Logout</a>
+  </nav>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;font-size:20px">☰</button>
+      <span class="topbar-title">Products Management</span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar">A</div>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div><h1>Products</h1><p>Manage your product catalogue. All items sold in bundles.</p></div>
+      <button class="btn btn-primary" onclick="openAddProduct()">+ Add New Product</button>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-head">
+        <div class="filter-bar">
+          <div class="search-box"><input type="text" id="search-input" placeholder="Search products..." oninput="filterProducts()"></div>
+          <select class="filter-select" id="cat-filter" onchange="filterProducts()">
+            <option value="">All Categories</option>
+          </select>
+          <select class="filter-select" id="status-filter" onchange="filterProducts()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Product</th><th>SKU</th><th>Price/Bundle</th><th>Bundle Info</th><th>Stock</th><th>Status</th><th>Featured</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="products-table">
+            <tr><td colspan="8"><div class="loading-center"><div class="spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <h3 id="modal-title">Add New Product</h3>
+      <button class="modal-close" onclick="closeProductModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-alert"></div>
+      <form id="product-form" onsubmit="saveProduct(event)" enctype="multipart/form-data">
+        <input type="hidden" id="product-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Product Name *</label>
+            <input type="text" id="p-name" required placeholder="e.g., Premium Palm Oil">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <input type="text" id="p-category" placeholder="e.g., Oils, Honey, Fish">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="p-desc" rows="3" placeholder="Detailed product description..."></textarea>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Price per Bundle (₦) *</label>
+            <input type="number" id="p-price" required min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>Bundle Size (units) *</label>
+            <input type="number" id="p-bundle-size" required min="1" placeholder="e.g., 12">
+          </div>
+          <div class="form-group">
+            <label>Bundle Unit *</label>
+            <input type="text" id="p-bundle-unit" required placeholder="e.g., Carton, Bag">
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Net Weight per Bundle</label>
+            <input type="text" id="p-weight" placeholder="e.g., 25 Litres, 10 KG">
+          </div>
+          <div class="form-group">
+            <label>Minimum Order (bundles)</label>
+            <input type="number" id="p-min-order" min="1" value="1">
+          </div>
+          <div class="form-group">
+            <label>Stock Quantity (bundles)</label>
+            <input type="number" id="p-stock" min="0" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>SKU (unique)</label>
+          <input type="text" id="p-sku" placeholder="e.g., MCJ-OIL-001">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="p-featured" style="width:16px;height:16px"> Mark as Featured
+            </label>
+          </div>
+          <div class="form-group" id="active-group" style="display:none">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="p-active" checked style="width:16px;height:16px"> Product Active
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Product Image</label>
+          <div class="upload-zone" onclick="document.getElementById('p-image').click()">
+            <div class="upload-icon">📸</div>
+            <p>Click to upload image</p>
+            <small>JPG, PNG, WebP · Max 5MB</small>
+          </div>
+          <input type="file" id="p-image" accept="image/*" style="display:none" onchange="previewImg(this)">
+          <div id="img-preview" style="margin-top:10px;display:none">
+            <img id="img-preview-src" style="max-height:120px;border-radius:8px;border:1px solid var(--border)">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeProductModal()" class="btn btn-ghost">Cancel</button>
+      <button onclick="saveProduct(null)" class="btn btn-primary" id="save-product-btn">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3>Delete Product</h3><button class="modal-close" onclick="closeModal('delete-modal')">×</button></div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="del-product-name"></strong>? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('delete-modal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="confirmDelete()" class="btn btn-danger" id="del-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script>
+let allProducts = [];
+let deleteProductId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAdmin()) return;
+  await loadProducts();
+});
+
+async function loadProducts() {
+  try {
+    const data = await API.get('/products/admin/all');
+    if (!data.success) return;
+    allProducts = data.products;
+
+    // Populate category filter
+    const cats = [...new Set(data.products.map(p => p.category).filter(Boolean))];
+    const cf = document.getElementById('cat-filter');
+    cf.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+    renderProducts(allProducts);
+  } catch (e) {
+    Toast.error('Failed to load products');
+  }
+}
+
+function filterProducts() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+  const status = document.getElementById('status-filter').value;
+
+  let filtered = allProducts;
+  if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search) || (p.sku || '').toLowerCase().includes(search));
+  if (cat) filtered = filtered.filter(p => p.category === cat);
+  if (status === 'active') filtered = filtered.filter(p => p.is_active);
+  if (status === 'inactive') filtered = filtered.filter(p => !p.is_active);
+  renderProducts(filtered);
+}
+
+function renderProducts(products) {
+  const tbody = document.getElementById('products-table');
+  if (products.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">No products found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td style="display:flex;align-items:center;gap:10px">
+        <div style="width:44px;height:44px;border-radius:6px;background:#f0f7f2;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">
+          ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : '🌿'}
+        </div>
+        <div>
+          <div style="font-weight:600">${p.name}</div>
+          <div style="font-size:11px;color:var(--gray)">${p.category || '—'}</div>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--gray)">${p.sku || '—'}</td>
+      <td style="font-weight:700;color:var(--primary)">${formatCurrency(p.price)}</td>
+      <td style="font-size:12px">
+        <strong>${p.bundle_size}</strong> units/${p.bundle_unit}<br>
+        <span style="color:var(--gray)">Min: ${p.min_order || 1} ${p.bundle_unit}(s)</span>
+      </td>
+      <td>
+        <strong>${p.stock_quantity}</strong> ${p.bundle_unit}s
+        ${p.stock_quantity < 5 ? '<br><span style="font-size:11px;color:var(--danger)">Low Stock!</span>' : ''}
+      </td>
+      <td><span class="badge ${p.is_active ? 'badge-success' : 'badge-secondary'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+      <td>${p.is_featured ? '<span class="badge badge-warning">⭐ Featured</span>' : '<span style="font-size:12px;color:var(--gray)">—</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="editProduct(${p.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Del</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddProduct() {
+  document.getElementById('modal-title').textContent = 'Add New Product';
+  document.getElementById('product-form').reset();
+  document.getElementById('product-id').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('active-group').style.display = 'none';
+  document.getElementById('modal-alert').innerHTML = '';
+  openModal('product-modal');
+}
+
+function editProduct(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modal-title').textContent = 'Edit Product';
+  document.getElementById('product-id').value = p.id;
+  document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-category').value = p.category || '';
+  document.getElementById('p-desc').value = p.description || '';
+  document.getElementById('p-price').value = p.price || '';
+  document.getElementById('p-bundle-size').value = p.bundle_size || '';
+  document.getElementById('p-bundle-unit').value = p.bundle_unit || '';
+  document.getElementById('p-weight').value = p.net_weight || '';
+  document.getElementById('p-min-order').value = p.min_order || 1;
+  document.getElementById('p-stock').value = p.stock_quantity || 0;
+  document.getElementById('p-sku').value = p.sku || '';
+  document.getElementById('p-featured').checked = !!p.is_featured;
+  document.getElementById('p-active').checked = !!p.is_active;
+  document.getElementById('active-group').style.display = 'block';
+  document.getElementById('modal-alert').innerHTML = '';
+  if (p.image) {
+    document.getElementById('img-preview-src').src = p.image;
+    document.getElementById('img-preview').style.display = 'block';
+  } else {
+    document.getElementById('img-preview').style.display = 'none';
+  }
+  openModal('product-modal');
+}
+
+async function saveProduct(e) {
+  if (e) e.preventDefault();
+  const id = document.getElementById('product-id').value;
+  const btn = document.getElementById('save-product-btn');
+  setLoading(btn, true);
+  const alertEl = document.getElementById('modal-alert');
+  alertEl.innerHTML = '';
+
+  const formData = new FormData();
+  formData.append('name', document.getElementById('p-name').value);
+  formData.append('category', document.getElementById('p-category').value);
+  formData.append('description', document.getElementById('p-desc').value);
+  formData.append('price', document.getElementById('p-price').value);
+  formData.append('bundle_size', document.getElementById('p-bundle-size').value);
+  formData.append('bundle_unit', document.getElementById('p-bundle-unit').value);
+  formData.append('net_weight', document.getElementById('p-weight').value);
+  formData.append('min_order', document.getElementById('p-min-order').value);
+  formData.append('stock_quantity', document.getElementById('p-stock').value);
+  formData.append('sku', document.getElementById('p-sku').value);
+  formData.append('is_featured', document.getElementById('p-featured').checked ? 'true' : 'false');
+  formData.append('is_active', document.getElementById('p-active').checked ? 'true' : 'false');
+  const imgFile = document.getElementById('p-image').files[0];
+  if (imgFile) formData.append('image', imgFile);
+
+  try {
+    const url = id ? `/products/${id}` : '/products';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch('/api' + url, {
+      method,
+      headers: { 'Authorization': `Bearer ${API.token}` },
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      Toast.success(id ? 'Product updated!' : 'Product created!');
+      closeProductModal();
+      await loadProducts();
+    } else {
+      alertEl.innerHTML = `<div class="alert alert-danger">⚠️ ${data.message}</div>`;
+    }
+  } catch (err) {
+    alertEl.innerHTML = '<div class="alert alert-danger">⚠️ Server error. Please try again.</div>';
+  }
+  setLoading(btn, false);
+}
+
+function deleteProduct(id, name) {
+  deleteProductId = id;
+  document.getElementById('del-product-name').textContent = name;
+  openModal('delete-modal');
+}
+
+async function confirmDelete() {
+  if (!deleteProductId) return;
+  const btn = document.getElementById('del-btn');
+  setLoading(btn, true);
+  try {
+    const data = await API.delete(`/products/${deleteProductId}`);
+    if (data.success) {
+      Toast.success('Product deleted.');
+      closeModal('delete-modal');
+      await loadProducts();
+    } else {
+      Toast.error(data.message);
+    }
+  } catch (e) { Toast.error('Delete failed.'); }
+  setLoading(btn, false);
+  deleteProductId = null;
+}
+
+function closeProductModal() { closeModal('product-modal'); document.getElementById('product-form').reset(); }
+
+function previewImg(input) {
+  const file = input.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('img-preview-src').src = e.target.result;
+      document.getElementById('img-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function logout() { localStorage.removeItem('mcj_token'); localStorage.removeItem('mcj_user'); window.location.href = '/login.html'; }
+</script>
+</body>
+</html>

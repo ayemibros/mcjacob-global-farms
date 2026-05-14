@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - MC-JACOB GLOBAL FARMS LTD</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="auth-section" style="align-items:flex-start;padding:40px 20px">
+  <div class="auth-card" style="max-width:560px">
+    <div class="auth-logo">
+      <div class="logo-circle">🌿</div>
+      <h2>Become a Dealer</h2>
+      <p>Create your MC-Jacob Global Farms dealer account</p>
+    </div>
+
+    <div id="alert-box"></div>
+
+    <form id="register-form" onsubmit="handleRegister(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="full_name" placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" id="phone" placeholder="08012345678" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Business Name (Optional)</label>
+        <input type="text" id="business_name" placeholder="Your shop or business name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>State *</label>
+          <select id="state" required></select>
+        </div>
+        <div class="form-group">
+          <label>City / LGA *</label>
+          <input type="text" id="city" placeholder="Your city" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" id="address" placeholder="Full delivery address">
+      </div>
+      <div class="form-group">
+        <label>Referral Code (Optional)</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="referrer_code" placeholder="Enter referral code if you have one" style="text-transform:uppercase">
+          <button type="button" onclick="validateReferral()" class="btn btn-outline btn-sm" style="white-space:nowrap">Verify</button>
+        </div>
+        <div id="referral-status" class="form-text"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="password" placeholder="Min. 6 characters" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Confirm Password *</label>
+          <input type="password" id="confirm_password" placeholder="Repeat password" required>
+        </div>
+      </div>
+
+      <div style="background:var(--light-green);border-radius:8px;padding:14px;margin-bottom:18px;font-size:13px;color:var(--primary)">
+        ✅ By registering, you agree to our dealer terms and conditions. Products are sold in bundles only — no single unit sales.
+      </div>
+
+      <button type="submit" class="btn btn-green btn-block" id="register-btn">Create Dealer Account →</button>
+    </form>
+
+    <div class="auth-divider"><span>Already have an account?</span></div>
+    <a href="/login.html" class="btn btn-outline btn-block">Sign In</a>
+    <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray)">
+      <a href="/" style="color:var(--primary)">← Back to Home</a>
+    </p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script>
+if (isLoggedIn()) window.location.href = isAdmin() ? '/admin/' : '/dashboard.html';
+
+document.addEventListener('DOMContentLoaded', () => {
+  populateStates('state');
+  // Pre-fill referral code from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  if (ref) {
+    document.getElementById('referrer_code').value = ref.toUpperCase();
+    validateReferral();
+  }
+});
+
+async function validateReferral() {
+  const code = document.getElementById('referrer_code').value.trim();
+  const statusEl = document.getElementById('referral-status');
+  if (!code) { statusEl.innerHTML = ''; return; }
+  try {
+    const data = await API.get(`/referrer/validate/${code}`);
+    if (data.success) {
+      statusEl.innerHTML = `<span style="color:var(--success)">✅ Valid referral from: <strong>${data.referrer}</strong></span>`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--danger)">❌ Invalid referral code</span>`;
+    }
+  } catch (e) {}
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const alertBox = document.getElementById('alert-box');
+  alertBox.innerHTML = '';
+
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirm_password').value;
+  if (password !== confirmPassword) {
+    alertBox.innerHTML = '<div class="alert alert-danger">⚠️ Passwords do not match.</div>';
+    return;
+  }
+
+  const btn = document.getElementById('register-btn');
+  setLoading(btn, true);
+
+  try {
+    const data = await API.post('/auth/register', {
+      full_name: document.getElementById('full_name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      password,
+      business_name: document.getElementById('business_name').value.trim(),
+      address: document.getElementById('address').value.trim(),
+      state: document.getElementById('state').value,
+      city: document.getElementById('city').value.trim(),
+      referrer_code: document.getElementById('referrer_code').value.trim() || null
+    });
+
+    if (data.success) {
+      localStorage.setItem('mcj_token', data.token);
+      localStorage.setItem('mcj_user', JSON.stringify(data.user));
+      Toast.success('Account created! Welcome to MC-Jacob Global Farms!');
+      setTimeout(() => window.location.href = '/dashboard.html', 1200);
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-danger">⚠️ ${data.message}</div>`;
+      setLoading(btn, false);
+    }
+  } catch (err) {
+    alertBox.innerHTML = '<div class="alert alert-danger">⚠️ Connection error. Please try again.</div>';
+    setLoading(btn, false);
+  }
+}
+</script>
+</body>
+</html>

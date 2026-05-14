@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - MC-JACOB GLOBAL FARMS LTD</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🌿</div>
+      <div class="brand-text"><h1>MC-JACOB</h1><span>GLOBAL FARMS LTD</span></div>
+    </a>
+    <div class="navbar-actions">
+      <a href="/cart.html" class="btn-cart">🛒 Cart <span class="cart-badge" style="display:none">0</span></a>
+      <div id="nav-user-menu" style="display:none;align-items:center;gap:8px">
+        <span style="color:rgba(255,255,255,0.8);font-size:14px">Hi, <strong class="user-name"></strong></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div style="background:var(--primary-dark);padding:24px 0">
+  <div class="container">
+    <div class="breadcrumb" style="color:rgba(255,255,255,0.6)">
+      <a href="/" style="color:var(--gold)">Home</a><span>/</span>
+      <a href="/cart.html" style="color:var(--gold)">Cart</a><span>/</span> Checkout
+    </div>
+    <h1 style="color:white;font-size:28px">Checkout</h1>
+  </div>
+</div>
+
+<section class="checkout-section">
+  <div class="container">
+    <div class="checkout-container">
+      <div>
+        <!-- Step 1: Delivery -->
+        <div class="form-card">
+          <h3><span class="step-num">1</span> Delivery Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Recipient Name *</label>
+              <input type="text" id="recipient_name" placeholder="Full name">
+            </div>
+            <div class="form-group">
+              <label>Recipient Phone *</label>
+              <input type="tel" id="recipient_phone" placeholder="08012345678">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Delivery Address *</label>
+            <input type="text" id="delivery_address" placeholder="Full delivery address (street, landmark)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>State *</label>
+              <select id="delivery_state"></select>
+            </div>
+            <div class="form-group">
+              <label>City / LGA *</label>
+              <input type="text" id="delivery_city" placeholder="City or LGA">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Order Notes (Optional)</label>
+            <textarea id="notes" rows="2" placeholder="Special instructions for delivery"></textarea>
+          </div>
+        </div>
+
+        <!-- Step 2: Payment -->
+        <div class="form-card">
+          <h3><span class="step-num">2</span> Payment Method</h3>
+          <div class="payment-options">
+            <label class="payment-option" onclick="selectPayment('paystack')">
+              <input type="radio" name="payment" value="paystack" id="pay-paystack">
+              <span class="payment-option-icon">💳</span>
+              <div>
+                <div class="payment-option-title">Pay Online (Card/Bank/USSD)</div>
+                <div class="payment-option-desc">Secure payment via Paystack — instant confirmation</div>
+              </div>
+            </label>
+            <label class="payment-option" onclick="selectPayment('bank_transfer')">
+              <input type="radio" name="payment" value="bank_transfer" id="pay-bank">
+              <span class="payment-option-icon">🏦</span>
+              <div>
+                <div class="payment-option-title">Bank Transfer</div>
+                <div class="payment-option-desc">Transfer to our account and upload your receipt</div>
+              </div>
+            </label>
+            <label class="payment-option" onclick="selectPayment('whatsapp')">
+              <input type="radio" name="payment" value="whatsapp" id="pay-wa">
+              <span class="payment-option-icon">📱</span>
+              <div>
+                <div class="payment-option-title">WhatsApp Payment Proof</div>
+                <div class="payment-option-desc">Transfer to our account and send proof via WhatsApp</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Bank details (shown for bank/whatsapp) -->
+          <div id="bank-details-panel" class="bank-details" style="display:none;margin-top:16px">
+            <div style="font-weight:600;margin-bottom:10px;color:var(--primary)">🏦 Transfer to this account:</div>
+            <div class="bank-detail-row">
+              <span class="bank-detail-label">Bank Name</span>
+              <span class="bank-detail-value" id="ck-bank-name">—</span>
+            </div>
+            <div class="bank-detail-row">
+              <span class="bank-detail-label">Account Number</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="bank-detail-value" id="ck-acc-num">—</span>
+                <button class="copy-btn" onclick="copyText(document.getElementById('ck-acc-num').textContent,'Account number copied!')">📋</button>
+              </div>
+            </div>
+            <div class="bank-detail-row">
+              <span class="bank-detail-label">Account Name</span>
+              <span class="bank-detail-value">MC-JACOB GLOBAL FARMS LTD</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-green btn-block btn-lg" onclick="placeOrder()" id="place-order-btn">
+          Place Order & Proceed to Payment →
+        </button>
+      </div>
+
+      <!-- Order Summary -->
+      <div>
+        <div class="cart-summary" style="position:sticky;top:100px">
+          <h3>Order Summary</h3>
+          <div id="checkout-items" style="margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px"></div>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="ck-subtotal">₦0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping Fee</span>
+            <span>₦2,500.00</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span id="ck-total">₦0.00</span>
+          </div>
+          <div style="margin-top:16px;font-size:12px;color:var(--gray);text-align:center">
+            🔒 Your order is secured and encrypted
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+let paySettings = {};
+let selectedPayment = '';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAuth()) return;
+
+  populateStates('delivery_state');
+
+  // Pre-fill user info
+  const user = API.user;
+  if (user) {
+    document.getElementById('recipient_name').value = user.full_name || '';
+    document.getElementById('recipient_phone').value = user.phone || '';
+  }
+
+  // Render cart items in summary
+  const items = Cart.items;
+  if (items.length === 0) { window.location.href = '/cart.html'; return; }
+
+  const itemsContainer = document.getElementById('checkout-items');
+  itemsContainer.innerHTML = items.map(i => `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px">
+      <div>
+        <div style="font-weight:600">${i.name}</div>
+        <div style="color:var(--gray)">${i.quantity} ${i.bundle_unit}(s)</div>
+      </div>
+      <div style="font-weight:600;color:var(--primary)">${formatCurrency(i.price * i.quantity)}</div>
+    </div>
+  `).join('');
+
+  const subtotal = Cart.total;
+  document.getElementById('ck-subtotal').textContent = formatCurrency(subtotal);
+  document.getElementById('ck-total').textContent = formatCurrency(subtotal + 2500);
+
+  // Load payment settings
+  try {
+    const s = await API.get('/payments/settings/public');
+    if (s.success) {
+      paySettings = s.settings;
+      document.getElementById('ck-bank-name').textContent = s.settings.bank_name || '—';
+      document.getElementById('ck-acc-num').textContent = s.settings.bank_account_number || '—';
+    }
+  } catch (e) {}
+});
+
+function selectPayment(method) {
+  selectedPayment = method;
+  document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
+  const bankPanel = document.getElementById('bank-details-panel');
+  bankPanel.style.display = (method === 'bank_transfer' || method === 'whatsapp') ? 'block' : 'none';
+}
+
+async function placeOrder() {
+  if (!selectedPayment) {
+    Toast.warning('Please select a payment method');
+    return;
+  }
+  const delivery_address = document.getElementById('delivery_address').value.trim();
+  const delivery_state = document.getElementById('delivery_state').value;
+  const delivery_city = document.getElementById('delivery_city').value.trim();
+  const recipient_name = document.getElementById('recipient_name').value.trim();
+  const recipient_phone = document.getElementById('recipient_phone').value.trim();
+
+  if (!delivery_address || !delivery_state || !delivery_city || !recipient_name) {
+    Toast.warning('Please fill all delivery fields');
+    return;
+  }
+
+  const btn = document.getElementById('place-order-btn');
+  setLoading(btn, true);
+
+  try {
+    const cartItems = Cart.items.map(i => ({ product_id: i.id, quantity: i.quantity }));
+    const data = await API.post('/orders', {
+      items: cartItems, delivery_address, delivery_state, delivery_city,
+      recipient_name, recipient_phone, notes: document.getElementById('notes').value
+    });
+
+    if (data.success) {
+      Cart.clear();
+      localStorage.setItem('mcj_pending_order', JSON.stringify(data.order));
+      localStorage.setItem('mcj_payment_method', selectedPayment);
+      Toast.success('Order placed! Redirecting to payment...');
+      setTimeout(() => window.location.href = '/payment.html', 1000);
+    } else {
+      Toast.error(data.message);
+      setLoading(btn, false);
+    }
+  } catch (e) {
+    Toast.error('Failed to place order. Please try again.');
+    setLoading(btn, false);
+  }
+}
+</script>
+</body>
+</html>

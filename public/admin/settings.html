@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Admin | MC-JACOB GLOBAL FARMS</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<aside class="admin-sidebar" id="sidebar">
+  <div class="logo"><div class="logo-top"><div class="logo-icon">🌿</div><div class="logo-text"><h2>MC-JACOB</h2><span>GLOBAL FARMS LTD</span></div></div><span class="admin-badge">ADMIN PANEL</span></div>
+  <nav class="admin-nav">
+    <div class="admin-nav-section">Main</div>
+    <a href="/admin/"><span class="n-icon">📊</span> Dashboard</a>
+    <a href="/admin/products.html"><span class="n-icon">🌿</span> Products</a>
+    <a href="/admin/orders.html"><span class="n-icon">📦</span> Orders</a>
+    <a href="/admin/payments.html"><span class="n-icon">💳</span> Payments</a>
+    <a href="/admin/delivery.html"><span class="n-icon">🚚</span> Delivery</a>
+    <div class="admin-nav-section">Management</div>
+    <a href="/admin/dealers.html"><span class="n-icon">👥</span> Dealers</a>
+    <a href="/admin/referrers.html"><span class="n-icon">🔗</span> Referrers</a>
+    <a href="/admin/settings.html" class="active"><span class="n-icon">⚙️</span> Settings</a>
+    <div class="admin-nav-section">Account</div>
+    <a href="/"><span class="n-icon">🏠</span> View Site</a>
+    <a href="#" onclick="logout()"><span class="n-icon">🚪</span> Logout</a>
+  </nav>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;font-size:20px">☰</button>
+      <span class="topbar-title">Platform Settings</span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar">A</div>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-content" style="max-width:700px">
+    <div class="page-header"><h1>Settings</h1><p>Configure payment details, shipping and platform settings</p></div>
+
+    <div id="settings-alert"></div>
+
+    <form id="settings-form" onsubmit="saveSettings(event)">
+      <!-- Bank Settings -->
+      <div class="admin-card">
+        <div class="admin-card-head"><h3>🏦 Bank Account (for Transfers)</h3></div>
+        <div class="admin-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Bank Name</label>
+              <input type="text" id="s-bank-name" placeholder="e.g., Zenith Bank">
+            </div>
+            <div class="form-group">
+              <label>Account Number</label>
+              <input type="text" id="s-acc-num" placeholder="10-digit account number">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Account Name</label>
+            <input type="text" id="s-acc-name" placeholder="Registered account name" readonly style="background:var(--light-gray)">
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp & Contact -->
+      <div class="admin-card">
+        <div class="admin-card-head"><h3>📱 WhatsApp & Contact</h3></div>
+        <div class="admin-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>WhatsApp Number (with country code)</label>
+              <input type="text" id="s-wa-num" placeholder="e.g., 2348012345678">
+            </div>
+            <div class="form-group">
+              <label>Company Phone</label>
+              <input type="text" id="s-phone" placeholder="+234 801 234 5678">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Company Email</label>
+            <input type="email" id="s-email" placeholder="info@mcjacobfarms.com">
+          </div>
+          <div class="form-group">
+            <label>Company Address</label>
+            <input type="text" id="s-address" placeholder="Full company address">
+          </div>
+        </div>
+      </div>
+
+      <!-- Paystack -->
+      <div class="admin-card">
+        <div class="admin-card-head"><h3>💳 Paystack Gateway</h3></div>
+        <div class="admin-card-body">
+          <div class="alert alert-info" style="font-size:13px">Get your API keys from <strong>dashboard.paystack.com</strong> → Settings → API Keys & Webhooks</div>
+          <div class="form-group">
+            <label>Paystack Public Key (shown on frontend)</label>
+            <input type="text" id="s-pay-public" placeholder="pk_live_xxxxxxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label>Note: Secret key is set in your .env file (server-side only)</label>
+            <input type="text" value="Configured in .env → PAYSTACK_SECRET_KEY" readonly style="background:var(--light-gray);color:var(--gray)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping -->
+      <div class="admin-card">
+        <div class="admin-card-head"><h3>🚚 Shipping Fee</h3></div>
+        <div class="admin-card-body">
+          <div class="form-group">
+            <label>Default Shipping Fee (₦) — applied to all orders</label>
+            <input type="number" id="s-shipping" placeholder="2500" min="0">
+          </div>
+          <div class="alert alert-warning" style="font-size:13px">
+            ⚠️ Changing shipping fee will apply to new orders only, not existing ones.
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="padding:12px 32px;font-size:15px" id="save-btn">Save All Settings</button>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAdmin()) return;
+  await loadSettings();
+});
+
+async function loadSettings() {
+  try {
+    const data = await API.get('/admin/settings');
+    if (!data.success) return;
+    const s = data.settings;
+    document.getElementById('s-bank-name').value = s.bank_name || '';
+    document.getElementById('s-acc-num').value = s.bank_account_number || '';
+    document.getElementById('s-acc-name').value = s.bank_account_name || 'MC-JACOB GLOBAL FARMS LTD';
+    document.getElementById('s-wa-num').value = s.whatsapp_number || '';
+    document.getElementById('s-phone').value = s.company_phone || '';
+    document.getElementById('s-email').value = s.company_email || '';
+    document.getElementById('s-address').value = s.company_address || '';
+    document.getElementById('s-pay-public').value = s.paystack_public_key || '';
+    document.getElementById('s-shipping').value = s.shipping_fee || '2500';
+  } catch (e) { Toast.error('Failed to load settings'); }
+}
+
+async function saveSettings(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-btn');
+  setLoading(btn, true);
+  try {
+    const data = await API.put('/admin/settings', {
+      bank_name: document.getElementById('s-bank-name').value,
+      bank_account_number: document.getElementById('s-acc-num').value,
+      bank_account_name: 'MC-JACOB GLOBAL FARMS LTD',
+      whatsapp_number: document.getElementById('s-wa-num').value,
+      company_phone: document.getElementById('s-phone').value,
+      company_email: document.getElementById('s-email').value,
+      company_address: document.getElementById('s-address').value,
+      paystack_public_key: document.getElementById('s-pay-public').value,
+      shipping_fee: document.getElementById('s-shipping').value
+    });
+    if (data.success) {
+      Toast.success('Settings saved successfully!');
+      document.getElementById('settings-alert').innerHTML = '<div class="alert alert-success">✅ Settings updated. Changes will take effect immediately.</div>';
+      setTimeout(() => document.getElementById('settings-alert').innerHTML = '', 4000);
+    } else {
+      Toast.error(data.message);
+    }
+  } catch (e) { Toast.error('Failed to save settings'); }
+  setLoading(btn, false);
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function logout() { localStorage.removeItem('mcj_token'); localStorage.removeItem('mcj_user'); window.location.href = '/login.html'; }
+</script>
+</body>
+</html>

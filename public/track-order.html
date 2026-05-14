@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order - MC-JACOB GLOBAL FARMS LTD</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🌿</div>
+      <div class="brand-text"><h1>MC-JACOB</h1><span>GLOBAL FARMS LTD</span></div>
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="/">Home</a></li>
+      <li><a href="/shop.html">Shop</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="/cart.html" class="btn-cart">🛒 <span class="cart-badge" style="display:none">0</span></a>
+      <button class="nav-toggle">☰</button>
+    </div>
+  </div>
+</nav>
+
+<section style="background:var(--primary-dark);padding:36px 0">
+  <div class="container" style="text-align:center">
+    <h1 style="color:white;font-size:32px;margin-bottom:8px">Track Your Order</h1>
+    <p style="color:rgba(255,255,255,0.7)">Enter your order number to check delivery status</p>
+  </div>
+</section>
+
+<section style="background:var(--light-gray);min-height:60vh;padding:40px 0">
+  <div class="container" style="max-width:560px">
+    <div class="form-card">
+      <h3 style="font-size:18px;margin-bottom:16px">Enter Order Number</h3>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="order-num-input" placeholder="e.g., MCJ1234567890" style="flex:1;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+        <button class="btn btn-green" onclick="trackOrder()" id="track-btn">Track →</button>
+      </div>
+      <div id="track-alert" style="margin-top:12px"></div>
+    </div>
+
+    <div id="tracking-result" style="display:none">
+      <div class="form-card">
+        <h3 style="font-size:18px;margin-bottom:16px">Order Status</h3>
+        <div id="order-info" style="background:var(--light-green);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px"></div>
+        <div id="delivery-timeline"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+async function trackOrder() {
+  if (!requireAuth()) return;
+  const orderNum = document.getElementById('order-num-input').value.trim();
+  if (!orderNum) { Toast.warning('Please enter an order number'); return; }
+
+  const btn = document.getElementById('track-btn');
+  setLoading(btn, true);
+  document.getElementById('track-alert').innerHTML = '';
+  document.getElementById('tracking-result').style.display = 'none';
+
+  try {
+    const data = await API.get(`/delivery/track/${orderNum}`);
+    if (!data.success) {
+      document.getElementById('track-alert').innerHTML = `<div class="alert alert-danger">⚠️ ${data.message}</div>`;
+    } else {
+      displayTrackingResult(data.order, data.delivery);
+    }
+  } catch (e) {
+    document.getElementById('track-alert').innerHTML = '<div class="alert alert-danger">⚠️ Failed to track order.</div>';
+  }
+  setLoading(btn, false);
+}
+
+function displayTrackingResult(order, delivery) {
+  const orderInfo = document.getElementById('order-info');
+  orderInfo.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="color:var(--gray);font-size:11px">ORDER #</div><strong style="color:var(--primary)">${order.order_number}</strong></div>
+      <div><div style="color:var(--gray);font-size:11px">DATE</div><strong>${formatDate(order.created_at)}</strong></div>
+      <div><div style="color:var(--gray);font-size:11px">ORDER STATUS</div>${statusBadge(order.status)}</div>
+      <div><div style="color:var(--gray);font-size:11px">PAYMENT</div>${statusBadge(order.payment_status)}</div>
+      <div style="grid-column:1/-1"><div style="color:var(--gray);font-size:11px">DELIVERY TO</div><strong>${order.delivery_address}, ${order.delivery_city}, ${order.delivery_state}</strong></div>
+    </div>
+  `;
+
+  const timeline = document.getElementById('delivery-timeline');
+  if (!delivery) {
+    timeline.innerHTML = '<div class="alert alert-info">Your order is being processed. Delivery details will appear here once dispatched.</div>';
+  } else {
+    const steps = [
+      { key: 'preparing', label: 'Order Being Prepared', icon: '📦' },
+      { key: 'dispatched', label: 'Order Dispatched', icon: '🚀' },
+      { key: 'in_transit', label: 'In Transit', icon: '🚚' },
+      { key: 'out_for_delivery', label: 'Out for Delivery', icon: '📍' },
+      { key: 'delivered', label: 'Delivered', icon: '✅' }
+    ];
+    const statuses = steps.map(s => s.key);
+    const currentIdx = statuses.indexOf(delivery.status);
+
+    timeline.innerHTML = `
+      ${delivery.tracking_number || delivery.courier ? `
+        <div style="background:var(--light-green);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+          ${delivery.courier ? `<div><strong>Courier:</strong> ${delivery.courier}</div>` : ''}
+          ${delivery.tracking_number ? `<div><strong>Tracking #:</strong> <code>${delivery.tracking_number}</code></div>` : ''}
+          ${delivery.estimated_delivery ? `<div><strong>Est. Delivery:</strong> ${formatDate(delivery.estimated_delivery)}</div>` : ''}
+        </div>` : ''}
+      <div class="order-timeline">
+        ${steps.map((step, i) => `
+          <div class="timeline-item">
+            <div class="timeline-dot ${i <= currentIdx ? 'done' : ''}"></div>
+            <div class="timeline-content">
+              <h5 style="color:${i <= currentIdx ? 'var(--primary)' : 'var(--gray)'}">${step.icon} ${step.label}</h5>
+              <p>${i === currentIdx ? 'Current status' : i < currentIdx ? 'Completed' : 'Pending'}</p>
+            </div>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('tracking-result').style.display = 'block';
+}
+
+// Allow Enter key to track
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('order-num-input').addEventListener('keypress', e => {
+    if (e.key === 'Enter') trackOrder();
+  });
+  Cart.updateCartBadge();
+
+  // Pre-fill from URL
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('order')) {
+    document.getElementById('order-num-input').value = params.get('order');
+    if (isLoggedIn()) trackOrder();
+  }
+});
+</script>
+</body>
+</html>

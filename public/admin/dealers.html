@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dealers - Admin | MC-JACOB GLOBAL FARMS</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<aside class="admin-sidebar" id="sidebar">
+  <div class="logo"><div class="logo-top"><div class="logo-icon">🌿</div><div class="logo-text"><h2>MC-JACOB</h2><span>GLOBAL FARMS LTD</span></div></div><span class="admin-badge">ADMIN PANEL</span></div>
+  <nav class="admin-nav">
+    <div class="admin-nav-section">Main</div>
+    <a href="/admin/"><span class="n-icon">📊</span> Dashboard</a>
+    <a href="/admin/products.html"><span class="n-icon">🌿</span> Products</a>
+    <a href="/admin/orders.html"><span class="n-icon">📦</span> Orders</a>
+    <a href="/admin/payments.html"><span class="n-icon">💳</span> Payments</a>
+    <a href="/admin/delivery.html"><span class="n-icon">🚚</span> Delivery</a>
+    <div class="admin-nav-section">Management</div>
+    <a href="/admin/dealers.html" class="active"><span class="n-icon">👥</span> Dealers</a>
+    <a href="/admin/referrers.html"><span class="n-icon">🔗</span> Referrers</a>
+    <a href="/admin/settings.html"><span class="n-icon">⚙️</span> Settings</a>
+    <div class="admin-nav-section">Account</div>
+    <a href="/"><span class="n-icon">🏠</span> View Site</a>
+    <a href="#" onclick="logout()"><span class="n-icon">🚪</span> Logout</a>
+  </nav>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;font-size:20px">☰</button>
+      <span class="topbar-title">Dealers Management</span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar">A</div>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <div class="page-header"><h1>Dealers</h1><p>Manage all registered dealer accounts</p></div>
+
+    <div class="admin-card">
+      <div class="admin-card-head">
+        <div class="filter-bar">
+          <div class="search-box"><input type="text" id="search-input" placeholder="Name, email or phone..." oninput="filterDealers()"></div>
+          <select class="filter-select" id="status-filter" onchange="filterDealers()">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        <span id="dealer-count" style="font-size:13px;color:var(--gray)">Loading...</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Dealer</th><th>Phone</th><th>Location</th><th>Referral Code</th><th>Orders</th><th>Total Spent</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="dealers-table">
+            <tr><td colspan="9"><div class="loading-center"><div class="spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dealer Details Modal -->
+<div class="modal-overlay" id="dealer-modal">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <h3>Dealer Details</h3>
+      <button class="modal-close" onclick="closeModal('dealer-modal')">×</button>
+    </div>
+    <div class="modal-body" id="dealer-modal-body"></div>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal-overlay" id="status-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><h3>Update Dealer Status</h3><button class="modal-close" onclick="closeModal('status-modal')">×</button></div>
+    <div class="modal-body">
+      <div id="status-alert"></div>
+      <input type="hidden" id="status-dealer-id">
+      <p style="margin-bottom:14px;font-size:14px">Updating status for: <strong id="status-dealer-name"></strong></p>
+      <div class="form-group">
+        <label>New Status</label>
+        <select id="new-status">
+          <option value="active">✅ Active</option>
+          <option value="inactive">⏸️ Inactive</option>
+          <option value="suspended">🚫 Suspended</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('status-modal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="updateDealerStatus()" class="btn btn-primary" id="status-btn">Update</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script>
+let allDealers = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAdmin()) return;
+  await loadDealers();
+});
+
+async function loadDealers() {
+  try {
+    const data = await API.get('/admin/dealers');
+    if (!data.success) return;
+    allDealers = data.dealers;
+    document.getElementById('dealer-count').textContent = `${allDealers.length} dealers total`;
+    renderDealers(allDealers);
+  } catch (e) { Toast.error('Failed to load dealers'); }
+}
+
+function filterDealers() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('status-filter').value;
+  let filtered = allDealers;
+  if (search) filtered = filtered.filter(d => d.full_name.toLowerCase().includes(search) || d.email.toLowerCase().includes(search) || (d.phone || '').includes(search));
+  if (status) filtered = filtered.filter(d => d.status === status);
+  renderDealers(filtered);
+}
+
+function renderDealers(dealers) {
+  const tbody = document.getElementById('dealers-table');
+  if (dealers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray)">No dealers found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = dealers.map(d => `
+    <tr>
+      <td>
+        <div style="font-weight:600">${d.full_name}</div>
+        <div style="font-size:11px;color:var(--gray)">${d.email}</div>
+        ${d.business_name ? `<div style="font-size:11px;color:var(--primary)">🏪 ${d.business_name}</div>` : ''}
+      </td>
+      <td style="font-size:12px">${d.phone || '—'}</td>
+      <td style="font-size:12px">${d.city ? `${d.city}, ` : ''}${d.state || '—'}</td>
+      <td><code style="font-size:12px;background:var(--light-gray);padding:2px 8px;border-radius:4px">${d.my_referral_code || '—'}</code></td>
+      <td style="text-align:center"><strong>${d.total_orders || 0}</strong></td>
+      <td style="font-weight:600;color:var(--primary)">${formatCurrency(d.total_spent || 0)}</td>
+      <td><span class="badge ${d.status==='active'?'badge-success':d.status==='suspended'?'badge-danger':'badge-secondary'}">${d.status}</span></td>
+      <td style="font-size:12px">${formatDate(d.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-outline btn-sm" onclick="viewDealer(${d.id})">View</button>
+          <button class="btn btn-ghost btn-sm" onclick="openStatusModal(${d.id},'${d.full_name}','${d.status}')">Status</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function viewDealer(id) {
+  const body = document.getElementById('dealer-modal-body');
+  body.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  openModal('dealer-modal');
+  try {
+    const data = await API.get(`/admin/dealers/${id}`);
+    if (!data.success) { body.innerHTML = '<p class="alert alert-danger">Failed to load dealer.</p>'; return; }
+    const { dealer, orders, referrals } = data;
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:13px">
+        <div><span style="color:var(--gray);font-size:11px">Full Name</span><br><strong>${dealer.full_name}</strong></div>
+        <div><span style="color:var(--gray);font-size:11px">Email</span><br>${dealer.email}</div>
+        <div><span style="color:var(--gray);font-size:11px">Phone</span><br>${dealer.phone}</div>
+        <div><span style="color:var(--gray);font-size:11px">Business</span><br>${dealer.business_name || '—'}</div>
+        <div><span style="color:var(--gray);font-size:11px">Location</span><br>${dealer.city || '—'}, ${dealer.state || '—'}</div>
+        <div><span style="color:var(--gray);font-size:11px">Referral Code</span><br><code>${dealer.my_referral_code}</code></div>
+        <div><span style="color:var(--gray);font-size:11px">Total Orders</span><br><strong>${dealer.total_orders}</strong></div>
+        <div><span style="color:var(--gray);font-size:11px">Total Spent</span><br><strong style="color:var(--primary)">${formatCurrency(dealer.total_spent)}</strong></div>
+        <div><span style="color:var(--gray);font-size:11px">Status</span><br><span class="badge ${dealer.status==='active'?'badge-success':dealer.status==='suspended'?'badge-danger':'badge-secondary'}">${dealer.status}</span></div>
+        <div><span style="color:var(--gray);font-size:11px">Joined</span><br>${formatDate(dealer.created_at)}</div>
+      </div>
+      ${orders.length > 0 ? `
+        <div style="margin-bottom:14px">
+          <strong style="font-size:14px">Recent Orders</strong>
+          <div style="margin-top:8px;max-height:160px;overflow-y:auto">
+            ${orders.slice(0,5).map(o => `
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+                <span style="color:var(--primary)">${o.order_number}</span>
+                <span>${formatCurrency(o.total_amount)}</span>
+                <span class="badge badge-sm ${o.status==='delivered'?'badge-success':o.status==='cancelled'?'badge-danger':'badge-warning'}">${o.status}</span>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
+      ${referrals.length > 0 ? `
+        <div>
+          <strong style="font-size:14px">Referrals (${referrals.length})</strong>
+          <div style="margin-top:8px;max-height:120px;overflow-y:auto">
+            ${referrals.map(r => `<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">${r.full_name} — ${r.email} (joined ${formatDate(r.created_at)})</div>`).join('')}
+          </div>
+        </div>` : ''}
+      <div style="margin-top:16px">
+        <button class="btn btn-primary btn-sm" onclick="closeModal('dealer-modal');openStatusModal(${dealer.id},'${dealer.full_name}','${dealer.status}')">Update Status</button>
+      </div>
+    `;
+  } catch (e) { body.innerHTML = '<p class="alert alert-danger">Failed to load.</p>'; }
+}
+
+function openStatusModal(id, name, currentStatus) {
+  document.getElementById('status-dealer-id').value = id;
+  document.getElementById('status-dealer-name').textContent = name;
+  document.getElementById('new-status').value = currentStatus;
+  document.getElementById('status-alert').innerHTML = '';
+  openModal('status-modal');
+}
+
+async function updateDealerStatus() {
+  const id = document.getElementById('status-dealer-id').value;
+  const status = document.getElementById('new-status').value;
+  const btn = document.getElementById('status-btn');
+  setLoading(btn, true);
+  try {
+    const data = await API.put(`/admin/dealers/${id}/status`, { status });
+    if (data.success) {
+      Toast.success('Dealer status updated!');
+      closeModal('status-modal');
+      await loadDealers();
+    } else {
+      document.getElementById('status-alert').innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+    }
+  } catch (e) { Toast.error('Failed to update status'); }
+  setLoading(btn, false);
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function logout() { localStorage.removeItem('mcj_token'); localStorage.removeItem('mcj_user'); window.location.href = '/login.html'; }
+</script>
+</body>
+</html>

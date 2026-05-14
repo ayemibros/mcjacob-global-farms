@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments - Admin | MC-JACOB GLOBAL FARMS</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<aside class="admin-sidebar" id="sidebar">
+  <div class="logo"><div class="logo-top"><div class="logo-icon">🌿</div><div class="logo-text"><h2>MC-JACOB</h2><span>GLOBAL FARMS LTD</span></div></div><span class="admin-badge">ADMIN PANEL</span></div>
+  <nav class="admin-nav">
+    <div class="admin-nav-section">Main</div>
+    <a href="/admin/"><span class="n-icon">📊</span> Dashboard</a>
+    <a href="/admin/products.html"><span class="n-icon">🌿</span> Products</a>
+    <a href="/admin/orders.html"><span class="n-icon">📦</span> Orders</a>
+    <a href="/admin/payments.html" class="active"><span class="n-icon">💳</span> Payments</a>
+    <a href="/admin/delivery.html"><span class="n-icon">🚚</span> Delivery</a>
+    <div class="admin-nav-section">Management</div>
+    <a href="/admin/dealers.html"><span class="n-icon">👥</span> Dealers</a>
+    <a href="/admin/referrers.html"><span class="n-icon">🔗</span> Referrers</a>
+    <a href="/admin/settings.html"><span class="n-icon">⚙️</span> Settings</a>
+    <div class="admin-nav-section">Account</div>
+    <a href="/"><span class="n-icon">🏠</span> View Site</a>
+    <a href="#" onclick="logout()"><span class="n-icon">🚪</span> Logout</a>
+  </nav>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;font-size:20px">☰</button>
+      <span class="topbar-title">Payment Verification</span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar">A</div>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <div class="page-header"><h1>Payments</h1><p>Review and verify dealer payment submissions</p></div>
+
+    <!-- Pending Payments Alert -->
+    <div id="pending-alert"></div>
+
+    <div class="admin-card">
+      <div class="admin-card-head">
+        <div class="filter-bar">
+          <div class="search-box"><input type="text" id="search-input" placeholder="Order # or dealer name..." oninput="filterPayments()"></div>
+          <select class="filter-select" id="status-filter" onchange="filterPayments()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending Verification</option>
+            <option value="verified">Verified</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select class="filter-select" id="method-filter" onchange="filterPayments()">
+            <option value="">All Methods</option>
+            <option value="paystack">Paystack</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Dealer</th><th>Order #</th><th>Method</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="payments-table">
+            <tr><td colspan="7"><div class="loading-center"><div class="spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Verify Payment Modal -->
+<div class="modal-overlay" id="verify-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3>Verify Payment</h3>
+      <button class="modal-close" onclick="closeModal('verify-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="verify-alert"></div>
+      <input type="hidden" id="verify-pay-id">
+      <div id="payment-info" style="margin-bottom:16px"></div>
+      <div class="form-group">
+        <label>Decision *</label>
+        <select id="verify-status">
+          <option value="verified">✅ Verify — Mark as Paid</option>
+          <option value="rejected">❌ Reject — Decline Payment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Admin Notes</label>
+        <textarea id="verify-notes" rows="2" placeholder="Reason for decision or additional notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('verify-modal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="submitVerification()" class="btn btn-primary" id="verify-btn">Submit Decision</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt View Modal -->
+<div class="modal-overlay" id="receipt-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3>Payment Receipt</h3><button class="modal-close" onclick="closeModal('receipt-modal')">×</button></div>
+    <div class="modal-body" id="receipt-content" style="text-align:center"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script>
+let allPayments = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAdmin()) return;
+  await loadPayments();
+});
+
+async function loadPayments() {
+  try {
+    const data = await API.get('/payments');
+    if (!data.success) return;
+    allPayments = data.payments;
+
+    const pending = allPayments.filter(p => p.status === 'pending').length;
+    if (pending > 0) {
+      document.getElementById('pending-alert').innerHTML = `
+        <div class="alert alert-warning" style="display:flex;justify-content:space-between;align-items:center">
+          <span>⚠️ <strong>${pending}</strong> payment(s) awaiting verification</span>
+          <button onclick="document.getElementById('status-filter').value='pending';filterPayments()" class="btn btn-gold btn-sm">Show Pending</button>
+        </div>`;
+    }
+
+    renderPayments(allPayments);
+  } catch (e) { Toast.error('Failed to load payments'); }
+}
+
+function filterPayments() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('status-filter').value;
+  const method = document.getElementById('method-filter').value;
+  let filtered = allPayments;
+  if (search) filtered = filtered.filter(p => (p.order_number || '').toLowerCase().includes(search) || p.full_name.toLowerCase().includes(search));
+  if (status) filtered = filtered.filter(p => p.status === status);
+  if (method) filtered = filtered.filter(p => p.payment_method === method);
+  renderPayments(filtered);
+}
+
+function renderPayments(payments) {
+  const tbody = document.getElementById('payments-table');
+  if (payments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">No payments found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = payments.map(p => `
+    <tr>
+      <td style="font-size:12px">${formatDate(p.created_at)}</td>
+      <td>
+        <div style="font-weight:600">${p.full_name}</div>
+        <div style="font-size:11px;color:var(--gray)">${p.phone || ''}</div>
+      </td>
+      <td><strong style="color:var(--primary)">${p.order_number}</strong></td>
+      <td>
+        <span style="text-transform:capitalize;font-size:12px">${p.payment_method.replace('_',' ')}</span>
+        ${p.receipt_image ? `<br><button onclick="viewReceipt('${p.receipt_image}')" class="btn btn-ghost btn-sm" style="margin-top:4px;font-size:11px">📄 Receipt</button>` : ''}
+        ${p.whatsapp_sent ? '<br><span style="font-size:11px;color:#25d366">📱 WA Sent</span>' : ''}
+      </td>
+      <td style="font-weight:700;color:var(--primary)">${formatCurrency(p.amount)}</td>
+      <td><span class="badge ${p.status==='verified'?'badge-success':p.status==='rejected'?'badge-danger':'badge-warning'}">${p.status}</span>
+        ${p.admin_notes ? `<div style="font-size:11px;color:var(--gray);margin-top:2px">${p.admin_notes.slice(0,40)}...</div>` : ''}
+      </td>
+      <td>
+        ${p.status === 'pending' ? `
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-primary btn-sm" onclick="openVerify(${p.id})">Verify</button>
+          </div>` : `<span style="font-size:12px;color:var(--gray)">— Done</span>`
+        }
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openVerify(id) {
+  const p = allPayments.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('verify-pay-id').value = id;
+  document.getElementById('verify-status').value = 'verified';
+  document.getElementById('verify-notes').value = '';
+  document.getElementById('verify-alert').innerHTML = '';
+  document.getElementById('payment-info').innerHTML = `
+    <div style="background:var(--light-gray);border-radius:8px;padding:14px;font-size:13px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div style="color:var(--gray);font-size:11px">Dealer</div><strong>${p.full_name}</strong></div>
+        <div><div style="color:var(--gray);font-size:11px">Order</div><strong>${p.order_number}</strong></div>
+        <div><div style="color:var(--gray);font-size:11px">Method</div><span style="text-transform:capitalize">${p.payment_method.replace('_',' ')}</span></div>
+        <div><div style="color:var(--gray);font-size:11px">Amount</div><strong style="color:var(--primary);font-size:16px">${formatCurrency(p.amount)}</strong></div>
+        ${p.bank_name ? `<div><div style="color:var(--gray);font-size:11px">Bank</div>${p.bank_name}</div>` : ''}
+        ${p.depositor_name ? `<div><div style="color:var(--gray);font-size:11px">Depositor</div>${p.depositor_name}</div>` : ''}
+      </div>
+      ${p.receipt_image ? `<div style="margin-top:12px"><button onclick="viewReceipt('${p.receipt_image}')" class="btn btn-outline btn-sm">📄 View Receipt</button></div>` : ''}
+    </div>`;
+  openModal('verify-modal');
+}
+
+async function submitVerification() {
+  const id = document.getElementById('verify-pay-id').value;
+  const status = document.getElementById('verify-status').value;
+  const admin_notes = document.getElementById('verify-notes').value;
+  const btn = document.getElementById('verify-btn');
+  setLoading(btn, true);
+  try {
+    const data = await API.put(`/payments/${id}/verify`, { status, admin_notes });
+    if (data.success) {
+      Toast.success(status === 'verified' ? 'Payment verified! Order confirmed.' : 'Payment rejected.');
+      closeModal('verify-modal');
+      await loadPayments();
+    } else {
+      document.getElementById('verify-alert').innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+    }
+  } catch (e) { Toast.error('Failed to process verification'); }
+  setLoading(btn, false);
+}
+
+function viewReceipt(url) {
+  document.getElementById('receipt-content').innerHTML = url.endsWith('.pdf')
+    ? `<a href="${url}" target="_blank" class="btn btn-primary">📄 Open PDF Receipt</a>`
+    : `<img src="${url}" style="max-width:100%;border-radius:8px" alt="Receipt">`;
+  openModal('receipt-modal');
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function logout() { localStorage.removeItem('mcj_token'); localStorage.removeItem('mcj_user'); window.location.href = '/login.html'; }
+</script>
+</body>
+</html>

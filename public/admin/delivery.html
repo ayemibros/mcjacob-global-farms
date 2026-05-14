@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery - Admin | MC-JACOB GLOBAL FARMS</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<aside class="admin-sidebar" id="sidebar">
+  <div class="logo"><div class="logo-top"><div class="logo-icon">🌿</div><div class="logo-text"><h2>MC-JACOB</h2><span>GLOBAL FARMS LTD</span></div></div><span class="admin-badge">ADMIN PANEL</span></div>
+  <nav class="admin-nav">
+    <div class="admin-nav-section">Main</div>
+    <a href="/admin/"><span class="n-icon">📊</span> Dashboard</a>
+    <a href="/admin/products.html"><span class="n-icon">🌿</span> Products</a>
+    <a href="/admin/orders.html"><span class="n-icon">📦</span> Orders</a>
+    <a href="/admin/payments.html"><span class="n-icon">💳</span> Payments</a>
+    <a href="/admin/delivery.html" class="active"><span class="n-icon">🚚</span> Delivery</a>
+    <div class="admin-nav-section">Management</div>
+    <a href="/admin/dealers.html"><span class="n-icon">👥</span> Dealers</a>
+    <a href="/admin/referrers.html"><span class="n-icon">🔗</span> Referrers</a>
+    <a href="/admin/settings.html"><span class="n-icon">⚙️</span> Settings</a>
+    <div class="admin-nav-section">Account</div>
+    <a href="/"><span class="n-icon">🏠</span> View Site</a>
+    <a href="#" onclick="logout()"><span class="n-icon">🚪</span> Logout</a>
+  </nav>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;font-size:20px">☰</button>
+      <span class="topbar-title">Delivery Management</span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar">A</div>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div><h1>Deliveries</h1><p>Track and manage all shipments</p></div>
+      <button class="btn btn-primary" onclick="openCreateDelivery()">+ Create Delivery</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="stat-box"><div class="stat-box-icon bg-gold">📦</div><div class="stat-box-val" id="d-preparing">—</div><div class="stat-box-lbl">Preparing</div></div>
+      <div class="stat-box"><div class="stat-box-icon bg-blue">🚀</div><div class="stat-box-val" id="d-dispatched">—</div><div class="stat-box-lbl">Dispatched</div></div>
+      <div class="stat-box"><div class="stat-box-icon bg-teal">🚚</div><div class="stat-box-val" id="d-transit">—</div><div class="stat-box-lbl">In Transit</div></div>
+      <div class="stat-box"><div class="stat-box-icon bg-purple">📍</div><div class="stat-box-val" id="d-out">—</div><div class="stat-box-lbl">Out for Delivery</div></div>
+      <div class="stat-box"><div class="stat-box-icon bg-green">✅</div><div class="stat-box-val" id="d-delivered">—</div><div class="stat-box-lbl">Delivered</div></div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-head">
+        <div class="filter-bar">
+          <div class="search-box"><input type="text" id="search-input" placeholder="Order # or dealer name..." oninput="filterDeliveries()"></div>
+          <select class="filter-select" id="status-filter" onchange="filterDeliveries()">
+            <option value="">All Statuses</option>
+            <option value="preparing">Preparing</option>
+            <option value="dispatched">Dispatched</option>
+            <option value="in_transit">In Transit</option>
+            <option value="out_for_delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="returned">Returned</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Order #</th><th>Dealer</th><th>Destination</th><th>Courier</th><th>Tracking #</th><th>Est. Delivery</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="delivery-table">
+            <tr><td colspan="8"><div class="loading-center"><div class="spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Delivery Modal -->
+<div class="modal-overlay" id="create-delivery-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3>Create Delivery Record</h3>
+      <button class="modal-close" onclick="closeModal('create-delivery-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="create-alert"></div>
+      <div class="form-group">
+        <label>Order (confirmed + paid) *</label>
+        <select id="del-order-id"><option value="">Select Order...</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Courier / Logistics</label>
+          <input type="text" id="del-courier" placeholder="e.g., GIG Logistics">
+        </div>
+        <div class="form-group">
+          <label>Tracking Number</label>
+          <input type="text" id="del-tracking" placeholder="Waybill or tracking #">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Estimated Delivery Date</label>
+        <input type="date" id="del-est-date">
+      </div>
+      <div class="form-group">
+        <label>Dispatch Address / Warehouse</label>
+        <input type="text" id="del-dispatch" placeholder="From where it is shipped">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="del-notes" rows="2" placeholder="Any delivery instructions..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('create-delivery-modal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="createDelivery()" class="btn btn-primary" id="create-del-btn">Create Delivery</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal-overlay" id="update-delivery-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Update Delivery Status</h3>
+      <button class="modal-close" onclick="closeModal('update-delivery-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="update-alert"></div>
+      <input type="hidden" id="update-order-id">
+      <div class="form-group">
+        <label>New Status *</label>
+        <select id="update-status">
+          <option value="preparing">📦 Preparing</option>
+          <option value="dispatched">🚀 Dispatched</option>
+          <option value="in_transit">🚚 In Transit</option>
+          <option value="out_for_delivery">📍 Out for Delivery</option>
+          <option value="delivered">✅ Delivered</option>
+          <option value="returned">↩️ Returned</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="update-notes" rows="2" placeholder="Status update notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('update-delivery-modal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="updateDeliveryStatus()" class="btn btn-primary" id="update-del-btn">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script>
+let allDeliveries = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAdmin()) return;
+  await loadDeliveries();
+  await loadEligibleOrders();
+});
+
+async function loadDeliveries() {
+  try {
+    const data = await API.get('/delivery');
+    if (!data.success) return;
+    allDeliveries = data.deliveries;
+
+    // Update stats
+    const counts = {};
+    allDeliveries.forEach(d => counts[d.status] = (counts[d.status] || 0) + 1);
+    document.getElementById('d-preparing').textContent = counts.preparing || 0;
+    document.getElementById('d-dispatched').textContent = counts.dispatched || 0;
+    document.getElementById('d-transit').textContent = counts.in_transit || 0;
+    document.getElementById('d-out').textContent = counts.out_for_delivery || 0;
+    document.getElementById('d-delivered').textContent = counts.delivered || 0;
+
+    renderDeliveries(allDeliveries);
+  } catch (e) { Toast.error('Failed to load deliveries'); }
+}
+
+async function loadEligibleOrders() {
+  try {
+    const data = await API.get('/orders');
+    if (!data.success) return;
+    const eligible = data.orders.filter(o => o.payment_status === 'paid' && o.status !== 'delivered' && o.status !== 'cancelled');
+    const sel = document.getElementById('del-order-id');
+    eligible.forEach(o => {
+      sel.innerHTML += `<option value="${o.id}">${o.order_number} — ${o.full_name} (${formatCurrency(o.total_amount)})</option>`;
+    });
+  } catch (e) {}
+}
+
+function filterDeliveries() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('status-filter').value;
+  let filtered = allDeliveries;
+  if (search) filtered = filtered.filter(d => (d.order_number || '').toLowerCase().includes(search) || d.full_name.toLowerCase().includes(search));
+  if (status) filtered = filtered.filter(d => d.status === status);
+  renderDeliveries(filtered);
+}
+
+function renderDeliveries(deliveries) {
+  const tbody = document.getElementById('delivery-table');
+  if (deliveries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">No deliveries found. Create one from confirmed+paid orders.</td></tr>';
+    return;
+  }
+  const statusIcons = { preparing:'📦', dispatched:'🚀', in_transit:'🚚', out_for_delivery:'📍', delivered:'✅', returned:'↩️' };
+  tbody.innerHTML = deliveries.map(d => `
+    <tr>
+      <td><strong style="color:var(--primary)">${d.order_number}</strong></td>
+      <td>
+        <div style="font-weight:600">${d.full_name}</div>
+        <div style="font-size:11px;color:var(--gray)">${d.phone || ''}</div>
+      </td>
+      <td style="font-size:12px">
+        <div>${d.delivery_city || ''}, ${d.delivery_state || ''}</div>
+        <div style="color:var(--gray)">${d.recipient_name || ''} · ${d.recipient_phone || ''}</div>
+      </td>
+      <td style="font-size:12px">${d.courier || '—'}</td>
+      <td style="font-size:12px;font-family:monospace">${d.tracking_number || '—'}</td>
+      <td style="font-size:12px">${formatDate(d.estimated_delivery)}</td>
+      <td><span class="badge ${deliveryStatusClass(d.status)}">${statusIcons[d.status] || ''} ${d.status.replace('_',' ')}</span></td>
+      <td>
+        <button class="btn btn-primary btn-sm" onclick="openUpdateStatus(${d.order_id}, '${d.status}')">Update</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openCreateDelivery() {
+  document.getElementById('del-order-id').value = '';
+  document.getElementById('del-courier').value = '';
+  document.getElementById('del-tracking').value = '';
+  document.getElementById('del-est-date').value = '';
+  document.getElementById('del-dispatch').value = '';
+  document.getElementById('del-notes').value = '';
+  document.getElementById('create-alert').innerHTML = '';
+  openModal('create-delivery-modal');
+}
+
+async function createDelivery() {
+  const orderId = document.getElementById('del-order-id').value;
+  if (!orderId) { document.getElementById('create-alert').innerHTML = '<div class="alert alert-danger">Please select an order.</div>'; return; }
+  const btn = document.getElementById('create-del-btn');
+  setLoading(btn, true);
+  try {
+    const data = await API.post('/delivery', {
+      order_id: orderId,
+      courier: document.getElementById('del-courier').value,
+      tracking_number: document.getElementById('del-tracking').value,
+      estimated_delivery: document.getElementById('del-est-date').value,
+      dispatch_address: document.getElementById('del-dispatch').value,
+      delivery_notes: document.getElementById('del-notes').value
+    });
+    if (data.success) {
+      Toast.success('Delivery record created!');
+      closeModal('create-delivery-modal');
+      await loadDeliveries();
+    } else {
+      document.getElementById('create-alert').innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+    }
+  } catch (e) { Toast.error('Failed to create delivery'); }
+  setLoading(btn, false);
+}
+
+function openUpdateStatus(orderId, currentStatus) {
+  document.getElementById('update-order-id').value = orderId;
+  document.getElementById('update-status').value = currentStatus;
+  document.getElementById('update-notes').value = '';
+  document.getElementById('update-alert').innerHTML = '';
+  openModal('update-delivery-modal');
+}
+
+async function updateDeliveryStatus() {
+  const orderId = document.getElementById('update-order-id').value;
+  const status = document.getElementById('update-status').value;
+  const delivery_notes = document.getElementById('update-notes').value;
+  const btn = document.getElementById('update-del-btn');
+  setLoading(btn, true);
+  try {
+    const data = await API.put(`/delivery/${orderId}/status`, { status, delivery_notes });
+    if (data.success) {
+      Toast.success('Delivery status updated!');
+      closeModal('update-delivery-modal');
+      await loadDeliveries();
+    } else {
+      document.getElementById('update-alert').innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+    }
+  } catch (e) { Toast.error('Failed to update status'); }
+  setLoading(btn, false);
+}
+
+function deliveryStatusClass(s) {
+  return { preparing:'badge-warning', dispatched:'badge-info', in_transit:'badge-info', out_for_delivery:'badge-primary', delivered:'badge-success', returned:'badge-danger' }[s] || 'badge-secondary';
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function logout() { localStorage.removeItem('mcj_token'); localStorage.removeItem('mcj_user'); window.location.href = '/login.html'; }
+</script>
+</body>
+</html>

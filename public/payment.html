@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - MC-JACOB GLOBAL FARMS LTD</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">
+      <div class="brand-logo">🌿</div>
+      <div class="brand-text"><h1>MC-JACOB</h1><span>GLOBAL FARMS LTD</span></div>
+    </a>
+    <div class="navbar-actions">
+      <div id="nav-user-menu" style="display:none;align-items:center;gap:8px">
+        <span style="color:rgba(255,255,255,0.8);font-size:14px">Hi, <strong class="user-name"></strong></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section style="background:var(--light-gray);min-height:calc(100vh - 80px);padding:40px 0">
+  <div class="container" style="max-width:640px">
+    <div id="alert-box"></div>
+
+    <!-- Order Summary Card -->
+    <div class="form-card" id="order-summary-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div style="width:48px;height:48px;background:var(--light-green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px">✅</div>
+        <div>
+          <h3 style="font-size:20px;margin:0">Order Placed!</h3>
+          <p style="color:var(--gray);font-size:14px;margin:0">Complete your payment to confirm the order</p>
+        </div>
+      </div>
+      <div style="background:var(--light-green);border-radius:8px;padding:14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:14px;color:var(--gray)">Order Number</span>
+          <strong id="pay-order-num" style="color:var(--primary);font-family:'Playfair Display',serif"></strong>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:14px;color:var(--gray)">Amount Due</span>
+          <strong id="pay-amount" style="font-size:20px;color:var(--primary)"></strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYSTACK SECTION -->
+    <div class="form-card" id="paystack-section" style="display:none">
+      <h3 style="margin-bottom:16px">💳 Pay Online Securely</h3>
+      <div class="alert alert-info">Click the button below to complete payment via Paystack. Accepts cards, bank transfer & USSD.</div>
+      <button class="btn btn-green btn-block btn-lg" onclick="initiatePaystack()" id="paystack-btn">
+        Pay <span id="paystack-amount"></span> via Paystack
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--gray);margin-top:12px">🔒 Powered by Paystack · SSL Secured</p>
+    </div>
+
+    <!-- BANK TRANSFER SECTION -->
+    <div class="form-card" id="bank-section" style="display:none">
+      <h3 style="margin-bottom:16px">🏦 Bank Transfer</h3>
+      <div class="alert alert-info">Transfer the exact amount to the account below, then upload your receipt.</div>
+
+      <div class="bank-details" style="margin-bottom:20px">
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Bank Name</span>
+          <span class="bank-detail-value" id="bank-name">—</span>
+        </div>
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Account Number</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="bank-detail-value" id="acc-num">—</span>
+            <button class="copy-btn" onclick="copyText(document.getElementById('acc-num').textContent,'Account number copied!')">📋 Copy</button>
+          </div>
+        </div>
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Account Name</span>
+          <span class="bank-detail-value">MC-JACOB GLOBAL FARMS LTD</span>
+        </div>
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Amount</span>
+          <span class="bank-detail-value" id="transfer-amount" style="font-size:18px"></span>
+        </div>
+      </div>
+
+      <form id="receipt-form" onsubmit="submitReceipt(event)">
+        <div class="form-group">
+          <label>Upload Payment Receipt *</label>
+          <div class="upload-zone" onclick="document.getElementById('receipt-file').click()">
+            <div class="upload-icon">📄</div>
+            <p>Click to upload receipt</p>
+            <small>JPG, PNG or PDF · Max 10MB</small>
+          </div>
+          <input type="file" id="receipt-file" accept="image/*,.pdf" style="display:none" onchange="previewReceipt(this)">
+          <div id="receipt-preview" class="upload-preview"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Bank Name</label>
+            <input type="text" id="deposit-bank" placeholder="e.g., GTBank">
+          </div>
+          <div class="form-group">
+            <label>Depositor Name</label>
+            <input type="text" id="depositor-name" placeholder="Name on transfer">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Transaction Date</label>
+          <input type="date" id="trans-date">
+        </div>
+        <button type="submit" class="btn btn-green btn-block" id="receipt-submit-btn">Submit Receipt for Verification</button>
+      </form>
+    </div>
+
+    <!-- WHATSAPP SECTION -->
+    <div class="form-card" id="wa-section" style="display:none">
+      <h3 style="margin-bottom:16px">📱 WhatsApp Payment</h3>
+      <div class="alert alert-info">Transfer the amount to our bank account, then send your receipt via WhatsApp.</div>
+
+      <div class="bank-details" style="margin-bottom:20px">
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Bank</span>
+          <span class="bank-detail-value" id="wa-bank-name">—</span>
+        </div>
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Account</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="bank-detail-value" id="wa-acc-num">—</span>
+            <button class="copy-btn" onclick="copyText(document.getElementById('wa-acc-num').textContent,'Copied!')">📋</button>
+          </div>
+        </div>
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Account Name</span>
+          <span class="bank-detail-value">MC-JACOB GLOBAL FARMS LTD</span>
+        </div>
+        <div class="bank-detail-row">
+          <span class="bank-detail-label">Amount</span>
+          <span class="bank-detail-value" id="wa-amount" style="font-size:18px"></span>
+        </div>
+      </div>
+
+      <a href="#" id="wa-send-btn" class="btn btn-block btn-lg" style="background:#25d366;color:white;margin-bottom:16px"
+         onclick="notifyWhatsApp(event)">
+        📱 Send Receipt on WhatsApp
+      </a>
+
+      <div class="alert alert-warning" style="font-size:13px">
+        After sending on WhatsApp, click "I've Sent My Receipt" below to update your order status.
+      </div>
+      <button class="btn btn-outline btn-block" onclick="confirmWhatsApp()">✅ I've Sent My Receipt</button>
+    </div>
+
+    <!-- Success -->
+    <div id="payment-success" style="display:none">
+      <div class="form-card" style="text-align:center;padding:40px">
+        <div style="font-size:64px;margin-bottom:16px">🎉</div>
+        <h2 style="color:var(--primary);margin-bottom:8px">Payment Submitted!</h2>
+        <p style="color:var(--gray);margin-bottom:24px">Your payment has been recorded. Our team will verify within <strong>24 hours</strong> and confirm your order.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <a href="/dashboard.html" class="btn btn-green">View My Orders</a>
+          <a href="/shop.html" class="btn btn-outline">Continue Shopping</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="toast-container"></div>
+<script src="/js/app.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+let pendingOrder = null;
+let paymentMethod = '';
+let paySettings = {};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!requireAuth()) return;
+
+  pendingOrder = JSON.parse(localStorage.getItem('mcj_pending_order') || 'null');
+  paymentMethod = localStorage.getItem('mcj_payment_method') || '';
+
+  if (!pendingOrder) {
+    window.location.href = '/dashboard.html';
+    return;
+  }
+
+  document.getElementById('pay-order-num').textContent = pendingOrder.order_number;
+  document.getElementById('pay-amount').textContent = formatCurrency(pendingOrder.total_amount);
+
+  // Load settings
+  try {
+    const s = await API.get('/payments/settings/public');
+    if (s.success) paySettings = s.settings;
+  } catch (e) {}
+
+  // Show appropriate payment section
+  if (paymentMethod === 'paystack') {
+    document.getElementById('paystack-section').style.display = 'block';
+    document.getElementById('paystack-amount').textContent = formatCurrency(pendingOrder.total_amount);
+    loadPaystack();
+  } else if (paymentMethod === 'bank_transfer') {
+    document.getElementById('bank-section').style.display = 'block';
+    document.getElementById('bank-name').textContent = paySettings.bank_name || '—';
+    document.getElementById('acc-num').textContent = paySettings.bank_account_number || '—';
+    document.getElementById('transfer-amount').textContent = formatCurrency(pendingOrder.total_amount);
+  } else if (paymentMethod === 'whatsapp') {
+    document.getElementById('wa-section').style.display = 'block';
+    document.getElementById('wa-bank-name').textContent = paySettings.bank_name || '—';
+    document.getElementById('wa-acc-num').textContent = paySettings.bank_account_number || '—';
+    document.getElementById('wa-amount').textContent = formatCurrency(pendingOrder.total_amount);
+    // Build WhatsApp message
+    const waNum = paySettings.whatsapp_number || '';
+    const msg = encodeURIComponent(`Hello MC-Jacob Farms!\n\nOrder: ${pendingOrder.order_number}\nAmount: ${formatCurrency(pendingOrder.total_amount)}\n\nI have made payment and attaching my receipt.`);
+    document.getElementById('wa-send-btn').href = `https://wa.me/${waNum}?text=${msg}`;
+  }
+});
+
+function loadPaystack() {
+  const script = document.createElement('script');
+  script.src = 'https://js.paystack.co/v1/inline.js';
+  document.head.appendChild(script);
+}
+
+function initiatePaystack() {
+  const user = API.user;
+  const handler = PaystackPop.setup({
+    key: paySettings.paystack_public_key || '',
+    email: user.email,
+    amount: Math.round(pendingOrder.total_amount * 100),
+    currency: 'NGN',
+    ref: `MCJ_${pendingOrder.order_number}_${Date.now()}`,
+    metadata: { order_id: pendingOrder.id, order_number: pendingOrder.order_number },
+    callback: async (response) => {
+      const btn = document.getElementById('paystack-btn');
+      setLoading(btn, true);
+      try {
+        const data = await API.post('/payments/verify-paystack', {
+          reference: response.reference,
+          order_id: pendingOrder.id
+        });
+        if (data.success) {
+          clearPendingOrder();
+          showSuccess();
+        } else {
+          Toast.error('Payment verification failed. Contact support.');
+          setLoading(btn, false);
+        }
+      } catch (e) {
+        Toast.error('Verification error. Please contact support.');
+        setLoading(btn, false);
+      }
+    },
+    onClose: () => Toast.info('Payment window closed')
+  });
+  handler.openIframe();
+}
+
+function previewReceipt(input) {
+  const preview = document.getElementById('receipt-preview');
+  const file = input.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.innerHTML = `<img src="${e.target.result}" style="max-height:160px;border-radius:8px;margin-top:8px">`;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } else if (file) {
+    preview.innerHTML = `<div style="padding:12px;background:var(--light-green);border-radius:8px;font-size:13px;margin-top:8px">📄 ${file.name}</div>`;
+    preview.style.display = 'block';
+  }
+}
+
+async function submitReceipt(e) {
+  e.preventDefault();
+  const file = document.getElementById('receipt-file').files[0];
+  if (!file) { Toast.warning('Please upload your payment receipt'); return; }
+
+  const btn = document.getElementById('receipt-submit-btn');
+  setLoading(btn, true);
+
+  const formData = new FormData();
+  formData.append('receipt', file);
+  formData.append('order_id', pendingOrder.id);
+  formData.append('amount', pendingOrder.total_amount);
+  formData.append('bank_name', document.getElementById('deposit-bank').value);
+  formData.append('depositor_name', document.getElementById('depositor-name').value);
+  formData.append('transaction_date', document.getElementById('trans-date').value);
+
+  try {
+    const data = await API.postForm('/payments/bank-transfer', formData);
+    if (data.success) {
+      clearPendingOrder();
+      showSuccess();
+    } else {
+      Toast.error(data.message || 'Upload failed');
+      setLoading(btn, false);
+    }
+  } catch (e) {
+    Toast.error('Upload failed. Please try again.');
+    setLoading(btn, false);
+  }
+}
+
+function notifyWhatsApp(e) {
+  // Open WhatsApp link (default behavior)
+}
+
+async function confirmWhatsApp() {
+  try {
+    const data = await API.post('/payments/whatsapp-notify', {
+      order_id: pendingOrder.id,
+      amount: pendingOrder.total_amount
+    });
+    if (data.success) {
+      clearPendingOrder();
+      showSuccess();
+    }
+  } catch (e) {
+    Toast.error('Failed to update. Please contact support.');
+  }
+}
+
+function clearPendingOrder() {
+  localStorage.removeItem('mcj_pending_order');
+  localStorage.removeItem('mcj_payment_method');
+}
+
+function showSuccess() {
+  document.getElementById('order-summary-card').style.display = 'none';
+  document.getElementById('paystack-section').style.display = 'none';
+  document.getElementById('bank-section').style.display = 'none';
+  document.getElementById('wa-section').style.display = 'none';
+  document.getElementById('payment-success').style.display = 'block';
+}
+</script>
+</body>
+</html>
