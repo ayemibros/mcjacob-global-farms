@@ -260,14 +260,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="product-image">
             ${p.image ? `<img src="${p.image}" alt="${p.name}">` : '<span class="no-img">🌿</span>'}
             ${p.is_featured ? '<span class="product-badge">Featured</span>' : ''}
+            <div class="product-bundle-strip">
+              📦 ${p.bundle_size} ${p.bundle_unit === 'bundle' || p.bundle_unit === 'Bundle' ? 'pcs' : 'units'}/bundle${p.net_weight ? ` · ${p.net_weight} each` : ''}
+            </div>
           </div>
           <div class="product-body">
             <div class="product-category">${p.category || 'Agricultural'}</div>
             <div class="product-name">${p.name}</div>
             <div class="product-description">${p.description || ''}</div>
-            <div class="product-meta">
-              <span>📦 ${p.bundle_size} units/${p.bundle_unit}</span>
-              ${p.net_weight ? `<span>⚖️ ${p.net_weight}</span>` : ''}
+            <div class="bundle-info">
+              <span class="bundle-info-icon">📦</span>
+              <div class="bundle-info-text">
+                <strong>Bundle of ${p.bundle_size} ${p.bundle_size === 1 ? 'piece' : 'pieces'} per ${p.bundle_unit}</strong>
+                <span>${p.net_weight ? `${p.net_weight} per piece` : `Per ${p.bundle_unit}`}${(p.min_order || 1) > 1 ? ` · Min. order: ${p.min_order}` : ''}</span>
+              </div>
             </div>
             <div class="product-price">
               <span class="price-amount">${formatCurrency(p.price)}</span>
@@ -275,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div class="product-footer">
               <span class="stock-info ${p.stock_quantity < 5 ? 'low' : ''}">
-                ${p.stock_quantity > 0 ? `${p.stock_quantity} ${p.bundle_unit}s available` : 'Out of stock'}
+                ${p.stock_quantity > 0 ? `${p.stock_quantity} ${p.bundle_unit}s left` : 'Out of stock'}
               </span>
               <button class="btn btn-green btn-sm" onclick="addToCartFromListing(${JSON.stringify(p).replace(/"/g,'&quot;')})"
                 ${p.stock_quantity === 0 ? 'disabled' : ''}>

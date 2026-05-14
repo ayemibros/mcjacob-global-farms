@@ -138,26 +138,28 @@ function renderProducts(products) {
         ${p.image ? `<img src="${p.image}" alt="${p.name}">` : '<span class="no-img">🌿</span>'}
         ${p.is_featured ? '<span class="product-badge">Featured</span>' : ''}
         ${p.stock_quantity === 0 ? '<span class="product-badge" style="background:var(--danger);color:white;right:12px;left:auto">Out of Stock</span>' : ''}
+        <div class="product-bundle-strip">
+          📦 ${p.bundle_size} ${p.bundle_size === 1 ? 'piece' : 'pieces'}/bundle${p.net_weight ? ` · ${p.net_weight} each` : ''}
+        </div>
       </div>
       <div class="product-body">
         <div class="product-category">${p.category || 'Agricultural Product'}</div>
         <div class="product-name">${p.name}</div>
         <div class="product-description">${p.description || ''}</div>
-        <div class="product-meta">
-          <span>📦 ${p.bundle_size} units/${p.bundle_unit}</span>
-          ${p.net_weight ? `<span>⚖️ ${p.net_weight}</span>` : ''}
+        <div class="bundle-info">
+          <span class="bundle-info-icon">📦</span>
+          <div class="bundle-info-text">
+            <strong>Bundle of ${p.bundle_size} ${p.bundle_size === 1 ? 'piece' : 'pieces'} per ${p.bundle_unit}</strong>
+            <span>${p.net_weight ? `${p.net_weight} per piece` : `Per ${p.bundle_unit}`} · Min. order: ${p.min_order || 1} ${p.bundle_unit}${(p.min_order || 1) > 1 ? 's' : ''}${p.sku ? ` · SKU: ${p.sku}` : ''}</span>
+          </div>
         </div>
         <div class="product-price">
           <span class="price-amount">${formatCurrency(p.price)}</span>
           <span class="price-per">per ${p.bundle_unit}</span>
         </div>
-        <div style="font-size:12px;color:var(--gray);margin-bottom:12px">
-          Min. order: ${p.min_order || 1} ${p.bundle_unit}(s)
-          ${p.sku ? ` · SKU: ${p.sku}` : ''}
-        </div>
         <div class="product-footer">
           <span class="stock-info ${p.stock_quantity < 5 ? 'low' : ''}">
-            ${p.stock_quantity > 0 ? `${p.stock_quantity} available` : 'Out of stock'}
+            ${p.stock_quantity > 0 ? `${p.stock_quantity} ${p.bundle_unit}s left` : 'Out of stock'}
           </span>
           <button class="btn btn-green btn-sm" onclick="openAddToCart(${p.id})"
             ${p.stock_quantity === 0 ? 'disabled' : ''}>
