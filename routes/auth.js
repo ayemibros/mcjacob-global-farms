@@ -161,4 +161,22 @@ router.put('/change-password', authenticate, async (req, res) => {
   }
 });
 
+// TEMPORARY: one-time admin creation — remove after use
+router.get('/create-admin-now', async (req, res) => {
+  try {
+    const [existing] = await db.query("SELECT id FROM users WHERE email = 'admin@mcjacobfarms.com'");
+    if (existing.length > 0) {
+      return res.json({ success: true, message: 'Admin already exists. Use: admin@mcjacobfarms.com / Admin@2024' });
+    }
+    const hash = await bcrypt.hash('Admin@2024', 10);
+    await db.query(
+      "INSERT INTO users (full_name, email, phone, password, role, my_referral_code, status) VALUES (?, ?, ?, ?, 'admin', 'ADMIN001', 'active')",
+      ['Super Admin', 'admin@mcjacobfarms.com', '07044784949', hash]
+    );
+    res.json({ success: true, message: 'Done! Login at /login.html with admin@mcjacobfarms.com / Admin@2024' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
