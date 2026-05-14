@@ -224,18 +224,6 @@ function confirmAddToCart() {
   closeModal('add-cart-modal');
 }
 
-async function loadCategories() {
-  try {
-    const data = await API.get('/products/categories');
-    if (data.success) {
-      const select = document.getElementById('category-filter');
-      data.categories.forEach(cat => {
-        select.innerHTML += `<option value="${cat}">${cat}</option>`;
-      });
-    }
-  } catch (e) {}
-}
-
 // WhatsApp float
 (async () => {
   try {
@@ -247,9 +235,25 @@ async function loadCategories() {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadCategories();
+  // Pre-fill from URL params (e.g. from homepage category strip)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('search')) document.getElementById('search-input').value = params.get('search');
+  loadCategories(params.get('category'));
   loadProducts();
 });
+
+async function loadCategories(preselectCategory = '') {
+  try {
+    const data = await API.get('/products/categories');
+    if (data.success) {
+      const select = document.getElementById('category-filter');
+      data.categories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}"${cat === preselectCategory ? ' selected' : ''}>${cat}</option>`;
+      });
+    }
+  } catch (e) {}
+  return true;
+}
 </script>
 </body>
 </html>

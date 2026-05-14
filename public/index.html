@@ -9,64 +9,120 @@
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="/" class="navbar-brand">
-      <div class="brand-logo">🌿</div>
-      <div class="brand-text">
-        <h1>MC-JACOB</h1>
-        <span>GLOBAL FARMS LTD</span>
+<!-- Top Announcement Bar -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <span>📞 07044784949</span>
+    <span>🚚 Nationwide delivery across all 36 states</span>
+    <span>📧 info@mcjacobfoods.com</span>
+  </div>
+</div>
+
+<!-- Site Header: Logo + Search + Cart -->
+<header class="site-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="/" class="header-logo">
+        <div class="header-logo-icon">🌿</div>
+        <div>
+          <span class="logo-main">MC-JACOB</span>
+          <span class="logo-sub">Global Farms Ltd</span>
+        </div>
+      </a>
+      <div class="header-search">
+        <input type="text" id="header-search-input" placeholder="Search products e.g. Fufu, Palm Oil, Honey..." onkeypress="if(event.key==='Enter')goSearch()">
+        <button class="header-search-btn" onclick="goSearch()">🔍</button>
       </div>
-    </a>
-    <ul class="navbar-nav" id="main-nav">
+      <div class="header-actions">
+        <a href="/cart.html" class="header-cart">
+          🛒 Cart <span class="cart-badge" style="display:none">0</span>
+        </a>
+        <a href="/login.html" class="btn btn-green btn-sm" id="nav-login">Sign In</a>
+        <div id="nav-user-menu" style="display:none;align-items:center;gap:10px">
+          <a href="/dashboard.html" style="color:var(--dark);font-size:13px;font-weight:600">Hi, <span class="user-name"></span></a>
+          <button onclick="logout()" class="btn btn-sm btn-outline">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Main Navigation -->
+<nav class="main-nav">
+  <div class="container">
+    <ul class="navbar-nav main-nav-links" id="main-nav">
       <li><a href="/" class="active">Home</a></li>
       <li><a href="/shop.html">Shop</a></li>
       <li><a href="#how-it-works">How It Works</a></li>
       <li><a href="#contact">Contact</a></li>
       <li id="nav-dashboard" style="display:none"><a href="/dashboard.html">My Account</a></li>
     </ul>
-    <div class="navbar-actions">
-      <a href="/cart.html" class="btn-cart">
-        🛒 Cart <span class="cart-badge" style="display:none">0</span>
-      </a>
-      <a href="/login.html" class="btn btn-login btn-sm" id="nav-login">Sign In</a>
-      <div id="nav-user-menu" style="display:none;align-items:center;gap:8px">
-        <span style="color:rgba(255,255,255,0.8);font-size:14px">Hi, <strong class="user-name"></strong></span>
-        <button onclick="logout()" class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)">Logout</button>
-      </div>
-      <button class="nav-toggle">☰</button>
-    </div>
+    <button class="nav-toggle">☰</button>
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero">
+<!-- Auto-Sliding Hero Banner -->
+<div class="hero-slider" id="hero-slider">
+  <div class="hero-slide slide-active" style="background:linear-gradient(135deg,#0d3b1e 0%,#1a6b35 100%)">
+    <div class="container">
+      <div class="slide-content">
+        <div class="slide-badge">🌾 Nigeria's Premier Dealer Platform</div>
+        <h2>Premium Farm Products<br><span>For Serious Dealers</span></h2>
+        <p>Source Fufu, Palm Oil, Honey & more in bulk at competitive wholesale prices.</p>
+        <div class="slide-btns">
+          <a href="/shop.html" class="btn btn-primary">Shop Now →</a>
+          <a href="/register.html" class="btn btn-secondary">Become a Dealer</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-slide" style="background:linear-gradient(135deg,#3d2000 0%,#7a4500 100%)">
+    <div class="container">
+      <div class="slide-content">
+        <div class="slide-badge">🍚 Quality Cassava Products</div>
+        <h2>Fufu & Pando<br><span>Bundle Orders Available</span></h2>
+        <p>1kg & 2kg Yam Fufu, Cassava Pando — certified quality, bulk pricing.</p>
+        <div class="slide-btns">
+          <a href="/shop.html" class="btn btn-primary">View Products →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-slide" style="background:linear-gradient(135deg,#0a2a4a 0%,#1a5080 100%)">
+    <div class="container">
+      <div class="slide-content">
+        <div class="slide-badge">🚚 Nationwide Coverage</div>
+        <h2>Delivery to All<br><span>36 States & FCT</span></h2>
+        <p>Fast, reliable logistics. Order today and track your delivery in real time.</p>
+        <div class="slide-btns">
+          <a href="/register.html" class="btn btn-primary">Register as Dealer →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slider-dots">
+    <button class="dot active" onclick="goToSlide(0)"></button>
+    <button class="dot" onclick="goToSlide(1)"></button>
+    <button class="dot" onclick="goToSlide(2)"></button>
+  </div>
+  <button class="slider-arrow prev" onclick="changeSlide(-1)">&#8249;</button>
+  <button class="slider-arrow next" onclick="changeSlide(1)">&#8250;</button>
+</div>
+
+<!-- Category Quick Links -->
+<div class="category-strip">
   <div class="container">
-    <div class="hero-content">
-      <div class="hero-badge">🌾 Nigeria's Premier Agricultural Dealer Platform</div>
-      <h1>Quality Farm Products<br><span>Delivered to Your Business</span></h1>
-      <p>Source premium agricultural products in bulk at wholesale prices. Fast delivery across all 36 states.</p>
-      <div class="hero-buttons">
-        <a href="/register.html" class="btn btn-primary btn-lg">Start as a Dealer →</a>
-        <a href="/shop.html" class="btn btn-secondary btn-lg">Browse Products</a>
-      </div>
-      <div class="hero-stats">
-        <div class="hero-stat"><h3>500+</h3><p>Active Dealers</p></div>
-        <div class="hero-stat"><h3>50+</h3><p>Product Lines</p></div>
-        <div class="hero-stat"><h3>36</h3><p>States Covered</p></div>
-      </div>
+    <div class="cat-links">
+      <a href="/shop.html" class="cat-link"><span class="cat-icon">🛍️</span><span>All Products</span></a>
+      <a href="/shop.html?category=Fufu" class="cat-link"><span class="cat-icon">🍚</span><span>Fufu</span></a>
+      <a href="/shop.html?category=Pando" class="cat-link"><span class="cat-icon">🥣</span><span>Pando</span></a>
+      <a href="/shop.html?category=Palm Oil" class="cat-link"><span class="cat-icon">🫒</span><span>Palm Oil</span></a>
+      <a href="/shop.html?category=Honey" class="cat-link"><span class="cat-icon">🍯</span><span>Honey</span></a>
+      <a href="/shop.html?category=Spices" class="cat-link"><span class="cat-icon">🌶️</span><span>Spices</span></a>
+      <a href="/shop.html?category=Fish" class="cat-link"><span class="cat-icon">🐟</span><span>Dried Fish</span></a>
     </div>
   </div>
-  <div class="hero-visual">
-    <div class="hero-icon-grid">
-      <div class="hero-icon-card"><div class="icon">🫒</div><p>Palm Oil</p></div>
-      <div class="hero-icon-card"><div class="icon">🍯</div><p>Organic Honey</p></div>
-      <div class="hero-icon-card"><div class="icon">🐟</div><p>Dried Fish</p></div>
-      <div class="hero-icon-card"><div class="icon">🌶️</div><p>Spices & More</p></div>
-    </div>
-  </div>
-</section>
+</div>
 
 <!-- Featured Products -->
 <section id="featured" style="padding-top:50px">
@@ -298,6 +354,36 @@ function addToCartFromListing(product) {
   }
   Cart.add(product, product.min_order || 1);
 }
+
+// Header search
+function goSearch() {
+  const q = document.getElementById('header-search-input').value.trim();
+  window.location.href = q ? `/shop.html?search=${encodeURIComponent(q)}` : '/shop.html';
+}
+
+// Hero slider
+(function() {
+  let current = 0;
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.slider-dots .dot');
+  let timer = setInterval(tick, 4500);
+
+  window.goToSlide = function(n) {
+    slides[current].classList.remove('slide-active');
+    dots[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('slide-active');
+    dots[current].classList.add('active');
+  };
+  window.changeSlide = function(dir) { clearInterval(timer); goToSlide(current + dir); timer = setInterval(tick, 4500); };
+  function tick() { goToSlide(current + 1); }
+
+  const slider = document.getElementById('hero-slider');
+  if (slider) {
+    slider.addEventListener('mouseenter', () => clearInterval(timer));
+    slider.addEventListener('mouseleave', () => { timer = setInterval(tick, 4500); });
+  }
+})();
 
 // Scroll-reveal: fires when elements enter the viewport
 function initReveal() {
