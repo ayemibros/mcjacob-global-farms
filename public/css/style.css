@@ -736,38 +736,39 @@ tbody tr:last-child td { border-bottom: none; }
   position: absolute; inset: 0;
   opacity: 0; transition: opacity 0.65s ease;
   pointer-events: none;
-  display: grid;
-  grid-template-columns: 55% 45%;
+  display: flex; align-items: center;
+  overflow: hidden;
 }
 .hero-slide.slide-active { opacity: 1; pointer-events: auto; }
 
-/* Left text column — full bleed, no container */
-.slide-content {
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 44px 48px 44px clamp(24px, 8vw, 100px);
-  position: relative; overflow: hidden;
-}
-.slide-content::before {
+/* Right image panel — full-height dark strip behind image, full-bleed */
+.hero-slide::after {
   content: '';
   position: absolute;
-  width: 320px; height: 320px; border-radius: 50%;
-  background: rgba(255,255,255,0.04);
-  bottom: -100px; left: -80px; pointer-events: none;
+  right: 0; top: 0; bottom: 0; width: 44%;
+  background: rgba(0,0,0,0.22);
+  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+  z-index: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-/* Right image column — diagonal cut + dot grid */
-.slide-image-col {
-  display: flex; align-items: center; justify-content: center;
-  position: relative; overflow: hidden;
-  background: rgba(0,0,0,0.2);
-  clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%);
+/* Container holds content — slightly wider than default */
+.hero-slide .container {
+  max-width: 1360px;
+  width: 100%;
+  padding: 0 40px;
+  display: grid;
+  grid-template-columns: 56% 44%;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  z-index: 1;
 }
-.slide-image-col::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px);
-  background-size: 22px 22px;
-  pointer-events: none;
+
+.slide-content {
+  display: flex; flex-direction: column; justify-content: center;
+  padding-right: 32px;
 }
 
 .slide-badge {
@@ -797,6 +798,12 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .slide-stat strong { display: block; font-size: 18px; font-weight: 700; color: var(--gold); font-family: 'Playfair Display', serif; }
 .slide-stat span   { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+/* Right column — centres the floating product image */
+.slide-image-col {
+  display: flex; align-items: center; justify-content: center;
+  position: relative; height: 100%;
+}
 
 /* Product image */
 .slide-img-glow {
