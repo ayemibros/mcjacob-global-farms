@@ -144,15 +144,15 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Seed default settings
 INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
-('bank_name', 'Zenith Bank'),
-('bank_account_name', 'MC-JACOB GLOBAL FARMS LTD'),
-('bank_account_number', '1234567890'),
-('whatsapp_number', '2348012345678'),
+('bank_name', 'Union Bank'),
+('bank_account_name', 'Mc-Jacob Global Farms Ltd'),
+('bank_account_number', '0164472977'),
+('whatsapp_number', '2347044784949'),
 ('shipping_fee', '2500'),
 ('paystack_public_key', 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'),
-('company_phone', '+234 801 234 5678'),
-('company_email', 'info@mcjacobfarms.com'),
-('company_address', 'No. 1 Farms Road, Abuja, Nigeria');
+('company_phone', '07044784949'),
+('company_email', 'info@mcjacobfoods.com'),
+('company_address', '');
 
 -- Seed admin user (password: Admin@2024)
 INSERT IGNORE INTO users (full_name, email, phone, password, role, my_referral_code, status) VALUES
