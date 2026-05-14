@@ -23,6 +23,26 @@ app.use('/api/delivery', require('./routes/delivery'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/referrer', require('./routes/referrer'));
 
+// ONE-TIME ADMIN SETUP — visit /api/setup-mcj-admin once, then this will be removed
+app.get('/api/setup-mcj-admin', async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    const db = require('./config/db');
+    const [existing] = await db.query("SELECT id FROM users WHERE email = 'admin@mcjacobfarms.com'");
+    if (existing.length > 0) {
+      return res.json({ success: true, message: 'Admin already exists. Login with admin@mcjacobfarms.com / Admin@2024' });
+    }
+    const hash = await bcrypt.hash('Admin@2024', 10);
+    await db.query(
+      "INSERT INTO users (full_name, email, phone, password, role, my_referral_code, status) VALUES (?, ?, ?, ?, 'admin', 'ADMIN001', 'active')",
+      ['Super Admin', 'admin@mcjacobfarms.com', '07044784949', hash]
+    );
+    res.json({ success: true, message: 'Admin created! Login: admin@mcjacobfarms.com / Admin@2024' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // SPA fallback for HTML pages
 app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
