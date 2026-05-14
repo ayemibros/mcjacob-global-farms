@@ -46,24 +46,15 @@
     <div class="hero-content">
       <div class="hero-badge">🌾 Nigeria's Premier Agricultural Dealer Platform</div>
       <h1>Quality Farm Products<br><span>Delivered to Your Business</span></h1>
-      <p>Join thousands of dealers across Nigeria. Source premium agricultural products in bulk at competitive wholesale prices. Fast delivery, verified quality.</p>
+      <p>Source premium agricultural products in bulk at wholesale prices. Fast delivery across all 36 states.</p>
       <div class="hero-buttons">
         <a href="/register.html" class="btn btn-primary btn-lg">Start as a Dealer →</a>
         <a href="/shop.html" class="btn btn-secondary btn-lg">Browse Products</a>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat">
-          <h3>500+</h3>
-          <p>Active Dealers</p>
-        </div>
-        <div class="hero-stat">
-          <h3>50+</h3>
-          <p>Product Lines</p>
-        </div>
-        <div class="hero-stat">
-          <h3>36</h3>
-          <p>States Covered</p>
-        </div>
+        <div class="hero-stat"><h3>500+</h3><p>Active Dealers</p></div>
+        <div class="hero-stat"><h3>50+</h3><p>Product Lines</p></div>
+        <div class="hero-stat"><h3>36</h3><p>States Covered</p></div>
       </div>
     </div>
   </div>
@@ -78,17 +69,17 @@
 </section>
 
 <!-- Featured Products -->
-<section id="featured">
+<section id="featured" style="padding-top:50px">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-badge">Our Products</div>
       <h2>Featured Products</h2>
-      <p>Premium quality agricultural products available for bulk dealer orders</p>
+      <p>Premium agricultural products available for bulk dealer orders</p>
     </div>
     <div class="products-grid" id="featured-products">
       <div class="loading-spinner"><div class="spinner"></div></div>
     </div>
-    <div style="text-align:center;margin-top:36px">
+    <div style="text-align:center;margin-top:32px" class="reveal">
       <a href="/shop.html" class="btn btn-outline btn-lg">View All Products →</a>
     </div>
   </div>
@@ -103,27 +94,27 @@
       <p>Simple steps to start ordering premium agricultural products as a dealer</p>
     </div>
     <div class="steps-grid">
-      <div class="step-card">
+      <div class="step-card reveal" style="transition-delay:0s">
         <div class="step-number">1</div>
         <h4>Register as Dealer</h4>
         <p>Create your dealer account in minutes. Provide your business details and get instant access to our wholesale catalogue.</p>
       </div>
-      <div class="step-card">
+      <div class="step-card reveal" style="transition-delay:0.1s">
         <div class="step-number">2</div>
         <h4>Browse & Add to Cart</h4>
         <p>Explore our full range of products. Select your desired quantities (sold in bundles) and add them to your cart.</p>
       </div>
-      <div class="step-card">
+      <div class="step-card reveal" style="transition-delay:0.2s">
         <div class="step-number">3</div>
         <h4>Checkout & Pay</h4>
         <p>Enter your delivery details, then pay via our secure payment gateway or direct bank transfer to our account.</p>
       </div>
-      <div class="step-card">
+      <div class="step-card reveal" style="transition-delay:0.3s">
         <div class="step-number">4</div>
         <h4>Upload Receipt</h4>
         <p>If paying by bank transfer, upload your receipt on the platform or send via WhatsApp for quick verification.</p>
       </div>
-      <div class="step-card">
+      <div class="step-card reveal" style="transition-delay:0.4s">
         <div class="step-number">5</div>
         <h4>Order Confirmed</h4>
         <p>Once payment is verified, your order is confirmed and dispatched. Track delivery status in your dashboard.</p>
@@ -141,22 +132,22 @@
       <p>Everything you need to run a successful agricultural dealership</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px">
-      <div class="feature-card">
+      <div class="feature-card reveal" style="transition-delay:0s">
         <div class="feature-icon">✅</div>
         <h4>Verified Quality</h4>
         <p>Every product passes rigorous quality checks before shipping to our dealers.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal" style="transition-delay:0.1s">
         <div class="feature-icon">💰</div>
         <h4>Wholesale Prices</h4>
         <p>Exclusive dealer pricing that maximizes your profit margins on resale.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal" style="transition-delay:0.2s">
         <div class="feature-icon">🚚</div>
         <h4>Nationwide Delivery</h4>
         <p>We deliver to all 36 states and FCT. Reliable logistics partners.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal" style="transition-delay:0.3s">
         <div class="feature-icon">🤝</div>
         <h4>Referral Earnings</h4>
         <p>Earn commissions by referring new dealers to the platform.</p>
@@ -255,8 +246,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await API.get('/products?featured=true');
     const grid = document.getElementById('featured-products');
     if (data.success && data.products.length > 0) {
-      grid.innerHTML = data.products.slice(0, 6).map(p => `
-        <div class="product-card">
+      grid.innerHTML = data.products.slice(0, 6).map((p, i) => `
+        <div class="product-card reveal" style="transition-delay:${i * 0.09}s">
           <div class="product-image">
             ${p.image ? `<img src="${p.image}" alt="${p.name}">` : '<span class="no-img">🌿</span>'}
             ${p.is_featured ? '<span class="product-badge">Featured</span>' : ''}
@@ -276,6 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
       `).join('');
+      if (window._revealProducts) window._revealProducts();
     } else {
       grid.innerHTML = '<p style="text-align:center;color:var(--gray);grid-column:1/-1">Products coming soon.</p>';
     }
@@ -306,6 +298,23 @@ function addToCartFromListing(product) {
   }
   Cart.add(product, product.min_order || 1);
 }
+
+// Scroll-reveal: fires when elements enter the viewport
+function initReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal, .reveal-left').forEach(el => observer.observe(el));
+}
+document.addEventListener('DOMContentLoaded', initReveal);
+// Re-run after products load (they're injected dynamically)
+const _origInitReveal = initReveal;
+window._revealProducts = () => { setTimeout(initReveal, 50); };
 </script>
 </body>
 </html>

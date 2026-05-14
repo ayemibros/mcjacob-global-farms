@@ -110,10 +110,11 @@ img { max-width: 100%; height: auto; }
 /* ===== HERO ===== */
 .hero {
   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #2d5a27 100%);
-  min-height: 85vh;
+  min-height: 58vh;
   display: flex; align-items: center;
   position: relative;
   overflow: hidden;
+  padding: 48px 0;
 }
 .hero::before {
   content: '';
@@ -143,27 +144,28 @@ img { max-width: 100%; height: auto; }
   letter-spacing: 0.5px;
 }
 .hero h1 {
-  font-size: clamp(36px, 5vw, 58px);
+  font-size: clamp(26px, 4vw, 44px);
   color: var(--white);
   line-height: 1.15;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .hero h1 span { color: var(--gold); }
 .hero p {
-  font-size: 18px;
+  font-size: 15px;
   color: rgba(255,255,255,0.8);
-  margin-bottom: 36px;
-  line-height: 1.7;
+  margin-bottom: 26px;
+  line-height: 1.65;
 }
-.hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
+.hero-buttons { display: flex; gap: 14px; flex-wrap: wrap; }
 .hero-stats {
-  display: flex; gap: 40px;
-  margin-top: 48px;
-  padding-top: 36px;
+  display: flex; gap: 32px;
+  margin-top: 28px;
+  padding-top: 22px;
   border-top: 1px solid rgba(255,255,255,0.15);
+  flex-wrap: wrap;
 }
-.hero-stat h3 { font-size: 28px; color: var(--gold); font-family: 'Playfair Display', serif; }
-.hero-stat p { font-size: 13px; color: rgba(255,255,255,0.65); }
+.hero-stat h3 { font-size: 22px; color: var(--gold); font-family: 'Playfair Display', serif; }
+.hero-stat p { font-size: 12px; color: rgba(255,255,255,0.65); }
 .hero-visual {
   position: absolute;
   right: 0; top: 0; bottom: 0;
@@ -173,7 +175,7 @@ img { max-width: 100%; height: auto; }
 }
 .hero-icon-grid {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 16px; padding: 40px;
+  gap: 12px; padding: 24px;
 }
 .hero-icon-card {
   background: rgba(255,255,255,0.07);
@@ -229,8 +231,25 @@ img { max-width: 100%; height: auto; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
 /* ===== SECTION ===== */
-section { padding: 80px 0; }
-.section-header { text-align: center; margin-bottom: 50px; }
+section { padding: 64px 0; }
+.section-header { text-align: center; margin-bottom: 44px; }
+
+/* ===== SCROLL REVEAL ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
 .section-badge {
   display: inline-block;
   background: var(--light-green);
