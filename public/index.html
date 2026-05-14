@@ -268,7 +268,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="product-detail-line">📦 ${p.bundle_size} ${p.bundle_size === 1 ? 'piece' : 'pieces'} per ${p.bundle_unit}${p.net_weight ? ` · ${p.net_weight} each` : ''}</div>
             <div class="product-price">
               <span class="price-amount">${formatCurrency(p.price)}</span>
-              <span class="price-per">/ ${p.bundle_unit}</span>
             </div>
             <button class="btn btn-green btn-block" onclick="addToCartFromListing(${JSON.stringify(p).replace(/"/g,'&quot;')})"
               ${p.stock_quantity === 0 ? 'disabled' : ''}>
